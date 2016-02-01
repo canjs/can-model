@@ -4,7 +4,9 @@
   "description": "can.Model",
   "main": "can-model.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "testee": "testee src/test.html --browsers firefox",
+    "test": "npm run jshint && npm run testee",
+    "jshint": "jshint src/. --config"
   },
   "repository": {
     "type": "git",
@@ -24,18 +26,21 @@
       "lib": "src"
     },
     "npmAlgorithm": "flat",
-    "npmIgnore": ["testee"]
+    "npmIgnore": [
+      "testee",
+      "jshint"
+    ]
   },
   "homepage": "https://github.com/canjs/can-model#readme",
   "dependencies": {
-    "can" : "^2.3.10",
+    "can": "^2.3.10",
     "jquery": "2.1.4"
   },
   "devDependencies": {
-    "steal-tools": "^0.13.3",
-    "jshint": "^2.7.0",
+    "jshint": "^2.9.1",
     "steal": "^0.13.2",
     "steal-qunit": "0.1.1",
+    "steal-tools": "^0.13.3",
     "testee": "^0.2.0"
   }
 }

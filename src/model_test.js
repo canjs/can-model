@@ -421,7 +421,8 @@ test('findAll string', function () {
 
 test('Model events', function () {
 	expect(12);
-	var order = 0;
+	var order = 0,
+		item;
 	can.Model('Test.Event', {
 		create: function (attrs) {
 			var def = isDojo ? new dojo.Deferred() : new can.Deferred();
@@ -460,7 +461,7 @@ test('Model events', function () {
 			ok(passedItem === item, 'got instance');
 			start();
 		});
-	var item = new Test.Event();
+	item = new Test.Event();
 	item.bind('created', function () {
 		ok(true, 'created');
 	})
@@ -794,7 +795,8 @@ test('extended templated destroy', function () {
 	stop();
 });
 test('overwrite makeFindAll', function () {
-	var store = {};
+	var store = {},
+		count;
 	var LocalModel = can.Model.extend({
 		makeFindOne: function (findOne) {
 			return function (params, success, error) {
@@ -842,7 +844,7 @@ test('overwrite makeFindAll', function () {
 		findOne: '/food/{id}'
 	}, {});
 	stop();
-	var count = 0;
+	count = 0;
 	Food.findOne({
 		id: 1
 	}, function (food) {
