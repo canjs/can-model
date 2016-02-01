@@ -1,12 +1,18 @@
 {
   "name": "can-model",
-  "version": "2.3.0",
+  "version": "2.3.10",
   "description": "can.Model",
   "main": "can-model.js",
   "scripts": {
+    "preversion": "npm test && npm run build",
+    "version": "git commit -am \"Update dist for release\" && git checkout -b release && git add -f dist/",
+    "postversion": "git push --tags && git checkout master && git branch -D release && git push",
     "testee": "testee src/test.html --browsers firefox",
     "test": "npm run jshint && npm run testee",
-    "jshint": "jshint src/. --config"
+    "jshint": "jshint src/. --config",
+    "release:patch": "npm version patch && npm publish",
+    "release:minor": "npm version minor && npm publish",
+    "release:major": "npm version major && npm publish",
   },
   "repository": {
     "type": "git",
