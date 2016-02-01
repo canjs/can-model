@@ -1,0 +1,41 @@
+{
+  "name": "can-model",
+  "version": "2.3.0",
+  "description": "can.Model",
+  "main": "can-model.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/canjs/can-model.git"
+  },
+  "keywords": [
+    "CanJS",
+    "DoneJS"
+  ],
+  "author": "Prashant Sharma and Bitovi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/canjs/can-model/issues"
+  },
+  "system": {
+    "directories": {
+      "lib": "src"
+    },
+    "npmAlgorithm": "flat",
+    "npmIgnore": ["testee"]
+  },
+  "homepage": "https://github.com/canjs/can-model#readme",
+  "dependencies": {
+    "can" : "^2.3.10",
+    "jquery": "2.1.4"
+  },
+  "devDependencies": {
+    "steal-tools": "^0.13.3",
+    "jshint": "^2.7.0",
+    "steal": "^0.13.2",
+    "steal-qunit": "0.1.1",
+    "testee": "^0.2.0"
+  }
+}
