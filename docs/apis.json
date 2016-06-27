@@ -9,6 +9,25 @@
 		"can-model.findAll",
 		"can-model.findOne",
 		"can-model.id",
-		"can-model.isNew"
+		"can-model.isNew",
+		"can-model.findAllData",
+		"can-model.findOne",
+		"can-model.findOneData",
+		"can-model.list",
+		"can-model.makeFindAll",
+		"can-model.makeFindOne",
+		"can-model.model",
+		"can-model.model_bind",
+		"can-model.model_destroy",
+		"can-model.model_save",
+		"can-model.model_unbind",
+		"can-model.parseModel",
+		"can-model.parseModels",
+		"can-model.removeAttr",
+		"can-model.resource",
+		"can-model.setup",
+		"can-model.store",
+		"can-model.unbind",
+		"can-model.update"
 	]}
 ]
