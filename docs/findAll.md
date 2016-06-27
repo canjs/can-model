@@ -122,7 +122,7 @@ The server should return data that looks like:
 ## Implement with an Object
 
 Implement findAll with an object that specifies the parameters to
-`can-util/dom/ajax/ajax` (jQuery.ajax) like:
+`[can-util/dom/ajax/ajax]` like:
 
 ```
 Recipe = Model.extend({
