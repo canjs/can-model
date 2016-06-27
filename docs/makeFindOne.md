@@ -1,4 +1,4 @@
-@function can-model.makeFindOne
+@function can-model.makeFindOne makeFindOne
 @parent can-model.static
 
 `makeFindOne` is a hook that lets you define special `findOne` behavior. 
@@ -11,9 +11,9 @@ Returns the external `findOne` method given the implemented [can-model.findOneDa
 
 @param {Model.findOneData} findOneData
 
-[can-model.findOne] is implemented with a `String`, [can-util.dom.ajax ajax settings object], or
+[can-model.findOne] is implemented with a `String`, [http://api.jquery.com/jQuery.ajax/#jQuery-ajax-settings ajax settings object], or
 [can-model.findOneData findOneData] function. If it is implemented as
-a `String` or [can-util.dom.ajax ajax settings object], those values are used
+a `String` or [http://api.jquery.com/jQuery.ajax/#jQuery-ajax-settings ajax settings object], those values are used
 to create a [can-model.findOneData findOneData] function.
 
 The [can-model.findOneData findOneData] function is passed to `makeFindOne`. `makeFindOne`

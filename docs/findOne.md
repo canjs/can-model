@@ -10,7 +10,7 @@ Retrieve a single instance from the server.
 @param {Object} params Values to filter the request or results with.
 @param {function(Model)} [success(model)] A callback to call on successful retrieval. The callback receives
 the retrieved resource as a Model.
-@param {function(AjaxSettings)} [error(xhr)] A callback to call when an error occurs. The callback receives the
+@param {function(Object)} [error(xhr)] A callback to call when an error occurs. The callback receives the
 XmlHttpRequest object.
 @return {Promise} A Promise that resolves to a [Model] instance of the retrieved model
 
@@ -47,9 +47,9 @@ which is passed to [can-model.makeFindOne makeFindOne] to create the external
 
 @param {STRING} url The URL of the service to retrieve JSON data.
 
-@signature `Model.findOne: {ajaxSettings}`
+@signature `Model.findOne: {Object}`
 
-Implements `findOne` with a [AjaxSettings ajax settings object].
+Implements `findOne` with a [http://api.jquery.com/jQuery.ajax/#jQuery-ajax-settings ajax settings object].
 
    findOne: {url: "/tasks/{id}", dataType: "json"}
 
@@ -58,7 +58,7 @@ a [can-model.makeFindOne makeFindOne function]
 which is passed to [can-model.makeFindOne makeFindOne] to create the external
 `findOne` method.
 
-@param {AjaxSettings} ajaxSettings A settings object that
+@param {Object} ajaxSettings A [http://api.jquery.com/jQuery.ajax/#jQuery-ajax-settings settings] object that
 specifies the options available to pass to [ajax].
 
 @body
@@ -106,7 +106,7 @@ The server should return data that looks like:
 ## Implement with an Object
 
 Implement `findOne` with an object that specifies the parameters to
-`can-util.dom.ajax` (jQuery.ajax) like:
+`can-util/dom/ajax/ajax` (jQuery.ajax) like:
 
 ```
 Recipe = Model.extend({

@@ -9,7 +9,7 @@ Retrieve multiple resources from a server.
 @param {Object} params Values to filter the request or results with.
 @param {function(Model.List)} [success(list)] A callback to call on successful retrieval. The callback receives
 a Model.List of the retrieved resources.
-@param {function(AjaxSettings)} [error(xhr)] A callback to call when an error occurs. The callback receives the
+@param {function(Object)} [error(xhr)] A callback to call when an error occurs. The callback receives the
 XmlHttpRequest object.
 @return {Promise} A Promise that resolves to a [can-model.List] of retrieved models.
 
@@ -63,9 +63,9 @@ _Note: .findAll can also accept an array, but you
 probably [should not be doing that](http://haacked.com/archive/2008/11/20/anatomy-of-a-subtle-json-vulnerability.aspx)._
 
 
-@signature `Model.findAll: {ajaxSettings}`
+@signature `Model.findAll: {Object}`
 
-Implements `findAll` with a [AjaxSettings ajax settings object].
+Implements `findAll` with a [http://api.jquery.com/jQuery.ajax/#jQuery-ajax-settings ajax settings object].
 
 ```
 findAll: {url: "/tasks", dataType: "json"}
@@ -76,8 +76,8 @@ a [can-model.findAllData findAllData function]
 which is passed to [can-model.makeFindAll makeFindAll] to create the external
 `findAll` method.
 
-@param {AjaxSettings} ajaxSettings A settings object that
-specifies the options available to pass to [can-util.dom.ajax].
+@param {Object} ajaxSettings A [http://api.jquery.com/jQuery.ajax/#jQuery-ajax-settings settings] object that
+specifies the options available to pass to [can-util/dom/ajax/ajax].
 
 @body
 
@@ -122,7 +122,7 @@ The server should return data that looks like:
 ## Implement with an Object
 
 Implement findAll with an object that specifies the parameters to
-`can-util.dom.ajax` (jQuery.ajax) like:
+`can-util/dom/ajax/ajax` (jQuery.ajax) like:
 
 ```
 Recipe = Model.extend({

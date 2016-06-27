@@ -17,7 +17,7 @@ that can be understood by [can-model.models].
 
 ## Use
 
-Typically, `findAll` is implemented with a "string" or [AjaxSettings ajax settings object] like:
+Typically, `findAll` is implemented with a "string" or [http://api.jquery.com/jQuery.ajax/#jQuery-ajax-settings ajax settings object] like:
 
 ```
 findAll: "GET /tasks"

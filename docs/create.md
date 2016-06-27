@@ -30,13 +30,13 @@ new instance on the server. (See below for more details.)
 @param {STRING} url The URL of the service to retrieve JSON data.
 
 
-@signature `Model.create: {ajaxSettings}`
+@signature `Model.create: {Object}`
 
 Specify an options object that is used to make a HTTP request to create
 persistent instances.
 
-@param {AjaxSettings} ajaxSettings A settings object that
-specifies the options available to pass to [can-util.dom.ajax].
+@param {Object} ajaxSettings A [http://api.jquery.com/jQuery.ajax/#jQuery-ajax-settings settings] object that
+specifies the options available to pass to [can-util/dom/ajax/ajax].
 
 @body
 

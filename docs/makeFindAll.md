@@ -11,9 +11,9 @@ Returns the external `findAll` method given the implemented [can-model.findAllDa
 
 @param {Model.findAllData} findAllData
 
-[can-model.findAll] is implemented with a `String`, [can-util.dom.ajax ajax settings object], or
+[can-model.findAll] is implemented with a `String`, [http://api.jquery.com/jQuery.ajax/#jQuery-ajax-settings ajax settings object], or
 [can-model.findAllData findAllData] function. If it is implemented as
-a `String` or [can-util.dom.ajax ajax settings object], those values are used
+a `String` or [http://api.jquery.com/jQuery.ajax/#jQuery-ajax-settings ajax settings object], those values are used
 to create a [can-model.findAllData findAllData] function.
 
 The [can-model.findAllData findAllData] function is passed to `makeFindAll`. `makeFindAll`
