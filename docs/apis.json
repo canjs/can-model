@@ -1,0 +1,14 @@
+[
+	{"can-model": [
+		"can-model.bind",
+		"can-model.create",
+		"can-model.findAll",
+		"can-model.model",
+		"can-model.models",
+		"can-model.destroy",
+		"can-model.findAll",
+		"can-model.findOne",
+		"can-model.id",
+		"can-model.isNew"
+	]}
+]
