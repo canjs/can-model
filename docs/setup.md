@@ -1,5 +1,7 @@
 @hide
-@function can-model.setup
+@function can-model.setup setup
 @parent can-model.static
 
-Configures
+@description Perform initialization logic for a Model subclass.
+
+@signature `Model.setup(base, fullName, staticProps, protoProps)`

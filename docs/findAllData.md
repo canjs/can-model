@@ -10,7 +10,7 @@ Ajax request.
 @return {Promise} A Promise that resolves to a data structure
 that can be understood by [can-model.models].
 
-
+@signature `function(params) -> Promise`
 
 
 @body
