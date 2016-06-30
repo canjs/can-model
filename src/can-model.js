@@ -1,6 +1,11 @@
-var can = require('can/util/');
-require('can/map/');
-require('can/list/');
+/* global global */
+var can = require('can-util');
+var Map = require('can-map');
+var Construct = require('can-construct');
+var List = require('can-list');
+var Observation = require('can-observation');
+var Event = require('can-event');
+var Promise = global.Promise;
 
 var ML;
 /** @add can.Model **/
@@ -12,28 +17,7 @@ var ML;
 // through a function before resolving the deferred.
 var pipe = function (def, thisArg, func) {
 	// The piped result will be available through a new Deferred.
-	var d = new can.Deferred();
-	def.then(function () {
-		var args = can.makeArray(arguments),
-			success = true;
-
-		try {
-			// Pipe the results through the function.
-			args[0] = func.apply(thisArg, args);
-		} catch (e) {
-			success = false;
-			// The function threw an error, so reject the Deferred.
-			d.rejectWith(d, [e].concat(args));
-		}
-		if (success) {
-			// Resolve the new Deferred with the piped value.
-			d.resolveWith(d, args);
-		}
-	}, function () {
-		// Pass on the rejection if the original Deferred never resolved.
-		d.rejectWith(this, arguments);
-	});
-
+	var d = def.then(func.bind(thisArg));
 	// `can.ajax` returns a Deferred with an abort method to halt the AJAX call.
 	if (typeof def.abort === 'function') {
 		d.abort = function () {
@@ -52,9 +36,9 @@ var pipe = function (def, thisArg, func) {
 
 	// ## getId
 	getId = function (inst) {
-		// `can.__observe` makes a note that `id` was just read.
-		can.__observe(inst, inst.constructor.id);
-		// Use `__get` instead of `attr` for performance. (But that means we have to remember to call `can.__observe`.)
+		// `Observation.add` makes a note that `id` was just read.
+		Observation.add(inst, inst.constructor.id);
+		// Use `__get` instead of `attr` for performance. (But that means we have to remember to call `Observation.add`.)
 		return inst.___get(inst.constructor.id);
 	},
 
@@ -74,18 +58,18 @@ var pipe = function (def, thisArg, func) {
 			}
 		} else {
 			// If the first argument is an object, just load it into `params`.
-			can.extend(params, ajaxOb);
+			can.assign(params, ajaxOb);
 		}
 
 		// If the `data` argument is a plain object, copy it into `params`.
 		params.data = typeof data === "object" && !can.isArray(data) ?
-			can.extend(params.data || {}, data) : data;
+			can.assign(params.data || {}, data) : data;
 
 		// Substitute in data for any templated parts of the URL.
-		params.url = can.sub(params.url, params.data, true);
+		params.url = can.string.sub(params.url, params.data, true);
 
-		return can.ajax(can.extend({
-			type: type || 'post',
+		return can.ajax(can.assign({
+			type: type.toUpperCase() || 'POST',
 			dataType: dataType || 'json',
 			success: success,
 			error: error
@@ -162,7 +146,7 @@ var pipe = function (def, thisArg, func) {
 				tmp = [],
 				// `ML` (see way below) is just `can.Model.List`.
 				ListClass = self.List || ML,
-				modelList = oldList instanceof can.List ? oldList : new ListClass(),
+				modelList = oldList instanceof List ? oldList : new ListClass(),
 
 				// Check if we were handed an Array or a model list.
 				rawDataIsList = instancesRawData instanceof ML,
@@ -208,7 +192,7 @@ var pipe = function (def, thisArg, func) {
 				});
 			}
 			// Clean up the store on the next turn of the event loop. (`this` is a model constructor.)
-			setTimeout(can.proxy(this._clean, this), 1);
+			setTimeout(this._clean.bind(this), 1);
 			return modelList;
 		},
 		// ## model
@@ -249,7 +233,7 @@ var pipe = function (def, thisArg, func) {
 	makeParser = {
 		parseModel: function (prop) {
 			return function (attributes) {
-				return prop ? can.getObject(prop, attributes) : attributes;
+				return prop ? can.string.getObject(prop, attributes) : attributes;
 			};
 		},
 		parseModels: function (prop) {
@@ -260,7 +244,7 @@ var pipe = function (def, thisArg, func) {
 
 				prop = prop || 'data';
 
-				var result = can.getObject(prop, attributes);
+				var result = can.string.getObject(prop, attributes);
 				if(!can.isArray(result)) {
 					throw new Error('Could not get any raw data while converting using .models');
 				}
@@ -292,7 +276,7 @@ var pipe = function (def, thisArg, func) {
 				// If the value of the property being used as the ID changed,
 				// indicate that in the request and replace the current ID property.
 				if (attrs[identity] && attrs[identity] !== id) {
-					attrs["new" + can.capitalize(id)] = attrs[identity];
+					attrs["new" + can.string.capitalize(id)] = attrs[identity];
 					delete attrs[identity];
 				}
 				attrs[identity] = id;
@@ -366,12 +350,17 @@ var pipe = function (def, thisArg, func) {
 	};
 
 // # can.Model
-// A can.Map that connects to a RESTful interface.
+// A Map that connects to a RESTful interface.
 /** @static */
-can.Model = can.Map.extend({
+can.Model = Map.extend({
 		// `fullName` identifies the model type in debugging.
-		fullName: "can.Model",
+		fullName: "Model",
 		_reqs: 0,
+
+		// ### id
+		// Default name of the id field.
+		id: "id",
+
 		// ## can.Model.setup
 		setup: function (base, fullName, staticProps, protoProps) {
 			// Assume `fullName` wasn't passed. (`can.Model.extend({ ... }, { ... })`)
@@ -384,7 +373,7 @@ can.Model = can.Map.extend({
 			// This is really unusual for a model though, since there's so much configuration.
 			if (!protoProps) {
 				//!steal-remove-start
-				can.dev.warn("can/model/model.js: can.Model extended without static properties.");
+				can.dev.warn("can-model/can-model.js: Model extended without static properties.");
 				//!steal-remove-end
 				protoProps = staticProps;
 			}
@@ -392,7 +381,7 @@ can.Model = can.Map.extend({
 			// Create the model store here, in case someone wants to use can.Model without inheriting from it.
 			this.store = {};
 
-			can.Map.setup.apply(this, arguments);
+			Map.setup.apply(this, arguments);
 			if (!can.Model) {
 				return;
 			}
@@ -408,7 +397,7 @@ can.Model = can.Map.extend({
 			}
 
 			var self = this,
-				clean = can.proxy(this._clean, self);
+				clean = this._clean.bind(self);
 
 			// Go through `ajaxMethods` and set up static methods according to their configurations.
 			can.each(ajaxMethods, function (method, name) {
@@ -429,18 +418,19 @@ can.Model = can.Map.extend({
 				// There may also be a "maker" function (like `makeFindAll`) that alters the behavior of acting upon models
 				// by changing when and how the function we just made with `ajaxMaker` gets called.
 				// For example, you might cache responses and only make a call when you don't have a cached response.
-				if (self["make" + can.capitalize(name)]) {
+				if (self["make" + can.string.capitalize(name)]) {
 					// Use the "maker" function to make the new "ajaxMethod" function.
-					var newMethod = self["make" + can.capitalize(name)](self[name]);
+					var newMethod = self["make" + can.string.capitalize(name)](self[name]);
 					// Replace the "ajaxMethod" function in the configuration with the new one.
 					// (`_overwrite` just overwrites a property in a given Construct.)
-					can.Construct._overwrite(self, base, name, function () {
+					Construct._overwrite(self, base, name, function () {
 						// Increment the numer of requests...
 						can.Model._reqs++;
 						// ...make the AJAX call (and whatever else you're doing)...
 						var def = newMethod.apply(this, arguments);
 						// ...and clean up the store.
-						var then = def.then(clean, clean);
+						var then = def.then(clean);
+						def.catch(clean);
 						// Pass along `abort` so you can still abort the AJAX call.
 						then.abort = def.abort;
 
@@ -453,14 +443,14 @@ can.Model = can.Map.extend({
 
 			// Set up `models` and `model`.
 			can.each(converters, function(converter, name) {
-				var parseName = "parse" + can.capitalize(name),
+				var parseName = "parse" + can.string.capitalize(name),
 					dataProperty = (staticProps && staticProps[name]) || self[name];
 
 				// For legacy e.g. models: 'someProperty' we set the `parseModel(s)` property
 				// to the given string and set .model(s) to the original converter
 				if(typeof dataProperty === 'string') {
 					self[parseName] = dataProperty;
-					can.Construct._overwrite(self, base, name, converter);
+					Construct._overwrite(self, base, name, converter);
 				} else if((staticProps && staticProps[name])) {
 					hasCustomConverter[parseName] = true;
 				}
@@ -471,17 +461,17 @@ can.Model = can.Map.extend({
 				var prop = (staticProps && staticProps[parseName]) || self[parseName];
 				// e.g. parseModels: 'someProperty' make a default parseModel(s)
 				if(typeof prop === 'string') {
-					can.Construct._overwrite(self, base, parseName, maker(prop));
+					Construct._overwrite(self, base, parseName, maker(prop));
 				} else if( (!staticProps || !can.isFunction(staticProps[parseName])) && !self[parseName] ) {
 					var madeParser = maker();
 					madeParser.useModelConverter = hasCustomConverter[parseName];
 					// Add a default parseModel(s) if there is none
-					can.Construct._overwrite(self, base, parseName, madeParser);
+					Construct._overwrite(self, base, parseName, madeParser);
 				}
 			});
 
 			// Make sure we have a unique name for this Model.
-			if (self.fullName === "can.Model" || !self.fullName) {
+			if (self.fullName === "Model" || !self.fullName) {
 				self.fullName = "Model" + (++modelNum);
 			}
 
@@ -518,7 +508,7 @@ can.Model = can.Map.extend({
 			if (can.Model._reqs && id != null) {
 				this.constructor.store[id] = this;
 			}
-			can.Map.prototype.setup.apply(this, arguments);
+			Map.prototype.setup.apply(this, arguments);
 		},
 		// ## can.Model#isNew
 		// Something is new if its ID is `null` or `undefined`.
@@ -534,18 +524,19 @@ can.Model = can.Map.extend({
 			return makeRequest(this, this.isNew() ? 'create' : 'update', success, error);
 		},
 		// ## can.Model#destroy
-		// Acts like can.Map.destroy but it also makes an AJAX call.
+		// Acts like Map.destroy but it also makes an AJAX call.
 		destroy: function (success, error) {
 			// If this model is new, don't make an AJAX call.
 			// Instead, we have to construct the Deferred ourselves and return it.
 			if (this.isNew()) {
 				var self = this;
-				var def = can.Deferred();
+				var def = Promise.resolve(self);
 				def.then(success, error);
 
-				return def.done(function (data) {
+				def.then(function (data) {
 					self.destroyed(data);
-				}).resolve(self);
+				});
+				return def;
 			}
 
 			// If it isn't new, though, go ahead and make a request.
@@ -553,20 +544,20 @@ can.Model = can.Map.extend({
 		},
 		// ## can.Model#bind and can.Model#unbind
 		// These aren't actually implemented here, but their setup needs to be changed to account for the store.
-		_bindsetup: function () {
+		_eventSetup: function () {
 			var modelInstance = this.___get(this.constructor.id);
 			if (modelInstance != null) {
 				this.constructor.store[modelInstance ] = this;
 			}
-			return can.Map.prototype._bindsetup.apply(this, arguments);
+			return Map.prototype._eventSetup.apply(this, arguments);
 		},
-		_bindteardown: function () {
+		_eventTeardown: function () {
 			delete this.constructor.store[getId(this)];
-			return can.Map.prototype._bindteardown.apply(this, arguments);
+			return Map.prototype._eventTeardown.apply(this, arguments);
 		},
 		// Change the behavior of `___set` to account for the store.
 		___set: function (prop, val) {
-			can.Map.prototype.___set.call(this, prop, val);
+			Map.prototype.___set.call(this, prop, val);
 			// If we add or change the ID, update the store accordingly.
 			// TODO: shouldn't this also delete the record from the old ID in the store?
 			if (prop === this.constructor.id && this._bindings) {
@@ -636,14 +627,14 @@ can.each([
 		// handler( 'change','1.destroyed' ). This is used
 		// to remove items on destroyed from Model Lists.
 		// but there should be a better way.
-		can.dispatch.call(this, {type:funcName, target: this}, []);
+		Event.trigger.call(this, {type:funcName, target: this}, []);
 
 		//!steal-remove-start
 		can.dev.log("Model.js - " + constructor.shortName + " " + funcName);
 		//!steal-remove-end
 
 		// Call event on the instance's Class
-		can.dispatch.call(constructor, funcName, [this]);
+		Event.trigger.call(constructor, funcName, [this]);
 	};
 });
 
@@ -651,12 +642,12 @@ can.each([
 // # can.Model.List
 // Model Lists are just like `Map.List`s except that when their items are
 // destroyed, they automatically get removed from the List.
-ML = can.Model.List = can.List.extend({
+ML = can.Model.List = List.extend({
 	// ## can.Model.List.setup
 	// On change or a nested named event, setup change bubbling.
 	// On any other type of event, setup "destroyed" bubbling.
 	_bubbleRule: function(eventName, list) {
-		var bubbleRules = can.List._bubbleRule(eventName, list);
+		var bubbleRules = List._bubbleRule(eventName, list);
 		bubbleRules.push('destroyed');
 		return bubbleRules;
 	}
@@ -665,13 +656,13 @@ ML = can.Model.List = can.List.extend({
 		// If there was a plain object passed to the List constructor,
 		// we use those as parameters for an initial findAll.
 		if (can.isPlainObject(params) && !can.isArray(params)) {
-			can.List.prototype.setup.apply(this);
-			this.replace(can.isDeferred(params) ? params : this.constructor.Map.findAll(params));
+			List.prototype.setup.apply(this);
+			this.replace(can.isPromise(params) ? params : this.constructor.Map.findAll(params));
 		} else {
 			// Otherwise, set up the list like normal.
-			can.List.prototype.setup.apply(this, arguments);
+			List.prototype.setup.apply(this, arguments);
 		}
-		this.bind('destroyed', can.proxy(this._destroyed, this));
+		this.bind('destroyed', this._destroyed.bind(this));
 	},
 	_destroyed: function (ev, attr) {
 		if (/\w+/.test(attr)) {
