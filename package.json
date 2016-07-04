@@ -45,7 +45,7 @@
     "can-list": "^3.0.0-pre.5",
     "can-map": "^3.0.0-pre.8",
     "can-observation": "^3.0.0-pre.2",
-    "can-util": "^3.0.0-pre.28",
+    "can-util": "^3.0.0-pre.31",
     "jquery": "2.1.4"
   },
   "devDependencies": {

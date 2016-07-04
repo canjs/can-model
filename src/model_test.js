@@ -453,8 +453,7 @@ test('save error args', function () {
 		.save(function () {
 			ok(false, 'success should not be called');
 			start();
-		}, function (pack) {
-			var jQXHR = pack[0];
+		}, function (jQXHR) {
 			ok(true, 'error called');
 			ok(jQXHR.getResponseHeader, 'jQXHR object');
 			start();
