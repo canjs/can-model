@@ -1,14 +1,23 @@
-/* global global */
-var can = require('can-util');
+/* global Promise */
 var Map = require('can-map');
 var Construct = require('can-construct');
 var List = require('can-list');
 var Observation = require('can-observation');
 var Event = require('can-event');
-var Promise = global.Promise;
+var assign = require('can-util/js/assign/assign');
+var canAjax = require('can-util/dom/ajax/ajax');
+var dev = require('can-util/js/dev/dev');
+var each = require('can-util/js/each/each');
+var isArray = require('can-util/js/is-array/is-array');
+var isFunction = require('can-util/js/is-function/is-function');
+var isPlainObject = require('can-util/js/is-plain-object/is-plain-object');
+var isPromise = require('can-util/js/is-promise/is-promise');
+var makeArray = require('can-util/js/make-array/make-array');
+var ns = require('can-util/namespace');
+var string = require('can-util/js/string/string');
 
 var ML;
-/** @add can.Model **/
+/** @add ns.Model **/
 // ## model.js
 // (Don't steal this file directly in your code.)
 
@@ -58,17 +67,17 @@ var pipe = function (def, thisArg, func) {
 			}
 		} else {
 			// If the first argument is an object, just load it into `params`.
-			can.assign(params, ajaxOb);
+			assign(params, ajaxOb);
 		}
 
 		// If the `data` argument is a plain object, copy it into `params`.
-		params.data = typeof data === "object" && !can.isArray(data) ?
-			can.assign(params.data || {}, data) : data;
+		params.data = typeof data === "object" && !isArray(data) ?
+			assign(params.data || {}, data) : data;
 
 		// Substitute in data for any templated parts of the URL.
-		params.url = can.string.sub(params.url, params.data, true);
+		params.url = string.sub(params.url, params.data, true);
 
-		return can.ajax(can.assign({
+		return canAjax(assign({
 			type: type.toUpperCase() || 'POST',
 			dataType: dataType || 'json',
 			success: success,
@@ -83,7 +92,7 @@ var pipe = function (def, thisArg, func) {
 
 		// If `modelObj` is an Array, it it means we are coming from
 		// the queued request, and we're passing already-serialized data.
-		if (can.isArray(modelObj)) {
+		if (isArray(modelObj)) {
 			// In that case, modelObj's signature will be `[modelObj, serializedData]`, so we need to unpack it.
 			args = modelObj[1];
 			modelObj = modelObj[0];
@@ -103,7 +112,7 @@ var pipe = function (def, thisArg, func) {
 		}
 		jqXHR = model[type].apply(model, args);
 
-		// Make sure that can.Model can react to the request before anything else does.
+		// Make sure that ns.Model can react to the request before anything else does.
 		deferred = pipe(jqXHR, modelObj, function (data) {
 			// `method` is here because `"destroyed" !== "destroy" + "d"`.
 			// TODO: Do something smarter/more consistent here?
@@ -129,7 +138,7 @@ var pipe = function (def, thisArg, func) {
 		models: function (instancesRawData, oldList, xhr) {
 			// Increment reqs counter so new instances will be added to the store.
 			// (This is cleaned up at the end of the method.)
-			can.Model._reqs++;
+			ns.Model._reqs++;
 
 			// If there is no data, we can't really do anything with it.
 			if (!instancesRawData) {
@@ -161,13 +170,13 @@ var pipe = function (def, thisArg, func) {
 				raw = raw.data;
 			}
 
-			if (typeof raw === 'undefined' || !can.isArray(raw)) {
+			if (typeof raw === 'undefined' || !isArray(raw)) {
 				throw new Error('Could not get any raw data while converting using .models');
 			}
 
 			//!steal-remove-start
 			if (!raw.length) {
-				can.dev.warn("model.js models has no data.");
+				dev.warn("model.js models has no data.");
 			}
 			//!steal-remove-end
 
@@ -178,14 +187,14 @@ var pipe = function (def, thisArg, func) {
 
 			// If we pushed these directly onto the list, it would cause a change event for each model.
 			// So, we push them onto `tmp` first and then push everything at once, causing one atomic change event that contains all the models at once.
-			can.each(raw, function (rawPart) {
+			each(raw, function (rawPart) {
 				tmp.push(self.model(rawPart, xhr));
 			});
 			modelList.push.apply(modelList, tmp);
 
 			// If there was other stuff on `instancesRawData`, let's transfer that onto `modelList` too.
-			if (!can.isArray(instancesRawData)) {
-				can.each(instancesRawData, function (val, prop) {
+			if (!isArray(instancesRawData)) {
+				each(instancesRawData, function (val, prop) {
 					if (prop !== 'data') {
 						modelList.attr(prop, val);
 					}
@@ -217,7 +226,7 @@ var pipe = function (def, thisArg, func) {
 				oldModel = this.store[id];
 			}
 
-			var model = oldModel && can.isFunction(oldModel.attr) ?
+			var model = oldModel && isFunction(oldModel.attr) ?
 					// If this model is in the store already, just update it.
 					oldModel.attr(attributes, this.removeAttr || false) :
 					// Otherwise, we need a new model.
@@ -233,19 +242,19 @@ var pipe = function (def, thisArg, func) {
 	makeParser = {
 		parseModel: function (prop) {
 			return function (attributes) {
-				return prop ? can.string.getObject(prop, attributes) : attributes;
+				return prop ? string.getObject(prop, attributes) : attributes;
 			};
 		},
 		parseModels: function (prop) {
 			return function (attributes) {
-				if(can.isArray(attributes)) {
+				if(isArray(attributes)) {
 					return attributes;
 				}
 
 				prop = prop || 'data';
 
-				var result = can.string.getObject(prop, attributes);
-				if(!can.isArray(result)) {
+				var result = string.getObject(prop, attributes);
+				if(!isArray(result)) {
 					throw new Error('Could not get any raw data while converting using .models');
 				}
 				return result;
@@ -276,7 +285,7 @@ var pipe = function (def, thisArg, func) {
 				// If the value of the property being used as the ID changed,
 				// indicate that in the request and replace the current ID property.
 				if (attrs[identity] && attrs[identity] !== id) {
-					attrs["new" + can.string.capitalize(id)] = attrs[identity];
+					attrs["new" + string.capitalize(id)] = attrs[identity];
 					delete attrs[identity];
 				}
 				attrs[identity] = id;
@@ -352,7 +361,7 @@ var pipe = function (def, thisArg, func) {
 // # can.Model
 // A Map that connects to a RESTful interface.
 /** @static */
-can.Model = Map.extend({
+ns.Model = Map.extend({
 		// `fullName` identifies the model type in debugging.
 		fullName: "Model",
 		_reqs: 0,
@@ -373,7 +382,7 @@ can.Model = Map.extend({
 			// This is really unusual for a model though, since there's so much configuration.
 			if (!protoProps) {
 				//!steal-remove-start
-				can.dev.warn("can-model/can-model.js: Model extended without static properties.");
+				dev.warn("can-model/can-model.js: Model extended without static properties.");
 				//!steal-remove-end
 				protoProps = staticProps;
 			}
@@ -382,7 +391,7 @@ can.Model = Map.extend({
 			this.store = {};
 
 			Map.setup.apply(this, arguments);
-			if (!can.Model) {
+			if (!ns.Model) {
 				return;
 			}
 
@@ -400,7 +409,7 @@ can.Model = Map.extend({
 				clean = this._clean.bind(self);
 
 			// Go through `ajaxMethods` and set up static methods according to their configurations.
-			can.each(ajaxMethods, function (method, name) {
+			each(ajaxMethods, function (method, name) {
 				// Check the configuration for this ajaxMethod.
 				// If the configuration isn't a function, it should be a string (like `"GET /endpoint"`)
 				// or an object like `{url: "/endpoint", type: 'GET'}`.
@@ -411,21 +420,21 @@ can.Model = Map.extend({
 					self[name] = ajaxMaker(method, staticProps[name]);
 				}
 				//if we have a resource property set in the static definition, but check if function exists already
-				else if(staticProps && staticProps.resource && !can.isFunction(staticProps[name])) {
+				else if(staticProps && staticProps.resource && !isFunction(staticProps[name])) {
 					self[name] = ajaxMaker(method, createURLFromResource(self, name));
 				}
 
 				// There may also be a "maker" function (like `makeFindAll`) that alters the behavior of acting upon models
 				// by changing when and how the function we just made with `ajaxMaker` gets called.
 				// For example, you might cache responses and only make a call when you don't have a cached response.
-				if (self["make" + can.string.capitalize(name)]) {
+				if (self["make" + string.capitalize(name)]) {
 					// Use the "maker" function to make the new "ajaxMethod" function.
-					var newMethod = self["make" + can.string.capitalize(name)](self[name]);
+					var newMethod = self["make" + string.capitalize(name)](self[name]);
 					// Replace the "ajaxMethod" function in the configuration with the new one.
 					// (`_overwrite` just overwrites a property in a given Construct.)
 					Construct._overwrite(self, base, name, function () {
 						// Increment the numer of requests...
-						can.Model._reqs++;
+						ns.Model._reqs++;
 						// ...make the AJAX call (and whatever else you're doing)...
 						var def = newMethod.apply(this, arguments);
 						// ...and clean up the store.
@@ -442,8 +451,8 @@ can.Model = Map.extend({
 			var hasCustomConverter = {};
 
 			// Set up `models` and `model`.
-			can.each(converters, function(converter, name) {
-				var parseName = "parse" + can.string.capitalize(name),
+			each(converters, function(converter, name) {
+				var parseName = "parse" + string.capitalize(name),
 					dataProperty = (staticProps && staticProps[name]) || self[name];
 
 				// For legacy e.g. models: 'someProperty' we set the `parseModel(s)` property
@@ -457,12 +466,12 @@ can.Model = Map.extend({
 			});
 
 			// Sets up parseModel(s)
-			can.each(makeParser, function(maker, parseName) {
+			each(makeParser, function(maker, parseName) {
 				var prop = (staticProps && staticProps[parseName]) || self[parseName];
 				// e.g. parseModels: 'someProperty' make a default parseModel(s)
 				if(typeof prop === 'string') {
 					Construct._overwrite(self, base, parseName, maker(prop));
-				} else if( (!staticProps || !can.isFunction(staticProps[parseName])) && !self[parseName] ) {
+				} else if( (!staticProps || !isFunction(staticProps[parseName])) && !self[parseName] ) {
 					var madeParser = maker();
 					madeParser.useModelConverter = hasCustomConverter[parseName];
 					// Add a default parseModel(s) if there is none
@@ -475,7 +484,7 @@ can.Model = Map.extend({
 				self.fullName = "Model" + (++modelNum);
 			}
 
-			can.Model._reqs = 0;
+			ns.Model._reqs = 0;
 			this._url = this._shortName + "/{" + this.id + "}";
 		},
 		_ajax: ajaxMaker,
@@ -483,9 +492,9 @@ can.Model = Map.extend({
 		// ## can.Model._clean
 		// `_clean` cleans up the model store after a request happens.
 		_clean: function () {
-			can.Model._reqs--;
+			ns.Model._reqs--;
 			// Don't clean up unless we have no pending requests.
-			if (!can.Model._reqs) {
+			if (!ns.Model._reqs) {
 				for (var id in this.store) {
 					// Delete all items in the store without any event bindings.
 					if (!this.store[id]._bindings) {
@@ -505,7 +514,7 @@ can.Model = Map.extend({
 			// Try to add things as early as possible to the store (#457).
 			// This is the earliest possible moment, even before any properties are set.
 			var id = attrs && attrs[this.constructor.id];
-			if (can.Model._reqs && id != null) {
+			if (ns.Model._reqs && id != null) {
 				this.constructor.store[id] = this;
 			}
 			Map.prototype.setup.apply(this, arguments);
@@ -591,12 +600,12 @@ var responseHandlers = {
 };
 
 // Go through the response handlers and make the actual "make" methods.
-can.each(responseHandlers, function (method, name) {
-	can.Model[name] = function (oldMethod) {
+each(responseHandlers, function (method, name) {
+	ns.Model[name] = function (oldMethod) {
 		return function () {
-			var args = can.makeArray(arguments),
+			var args = makeArray(arguments),
 				// If args[1] is a function, we were only passed one argument before success and failure callbacks.
-				oldArgs = can.isFunction(args[1]) ? args.splice(0, 1) : args.splice(0, 2),
+				oldArgs = isFunction(args[1]) ? args.splice(0, 1) : args.splice(0, 2),
 				// Call the AJAX method (`findAll` or `update`, etc.) and pipe it through the response handler from above.
 				def = pipe(oldMethod.apply(this, oldArgs), this, method);
 
@@ -608,19 +617,19 @@ can.each(responseHandlers, function (method, name) {
 
 // ## can.Model.created, can.Model.updated, and can.Model.destroyed
 // Livecycle methods for models.
-can.each([
+each([
 	"created",
 	"updated",
 	"destroyed"
 ], function (funcName) {
 	// Each of these is pretty much the same, except for the events they trigger.
-	can.Model.prototype[funcName] = function (attrs) {
+	ns.Model.prototype[funcName] = function (attrs) {
 		var self = this,
 			constructor = self.constructor;
 
 		// Update attributes if attributes have been passed
 		if(attrs && typeof attrs === 'object') {
-			this.attr(can.isFunction(attrs.attr) ? attrs.attr() : attrs);
+			this.attr(isFunction(attrs.attr) ? attrs.attr() : attrs);
 		}
 
 		// triggers change event that bubble's like
@@ -630,7 +639,7 @@ can.each([
 		Event.trigger.call(this, {type:funcName, target: this}, []);
 
 		//!steal-remove-start
-		can.dev.log("Model.js - " + constructor.shortName + " " + funcName);
+		dev.log("Model.js - " + constructor.shortName + " " + funcName);
 		//!steal-remove-end
 
 		// Call event on the instance's Class
@@ -642,7 +651,7 @@ can.each([
 // # can.Model.List
 // Model Lists are just like `Map.List`s except that when their items are
 // destroyed, they automatically get removed from the List.
-ML = can.Model.List = List.extend({
+ML = ns.Model.List = List.extend({
 	// ## can.Model.List.setup
 	// On change or a nested named event, setup change bubbling.
 	// On any other type of event, setup "destroyed" bubbling.
@@ -655,9 +664,9 @@ ML = can.Model.List = List.extend({
 	setup: function (params) {
 		// If there was a plain object passed to the List constructor,
 		// we use those as parameters for an initial findAll.
-		if (can.isPlainObject(params) && !can.isArray(params)) {
+		if (isPlainObject(params) && !isArray(params)) {
 			List.prototype.setup.apply(this);
-			this.replace(can.isPromise(params) ? params : this.constructor.Map.findAll(params));
+			this.replace(isPromise(params) ? params : this.constructor.Map.findAll(params));
 		} else {
 			// Otherwise, set up the list like normal.
 			List.prototype.setup.apply(this, arguments);
@@ -674,4 +683,4 @@ ML = can.Model.List = List.extend({
 	}
 });
 
-module.exports = can.Model;
+module.exports = ns.Model;
