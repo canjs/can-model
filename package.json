@@ -42,13 +42,13 @@
   },
   "homepage": "https://github.com/canjs/can-model#readme",
   "dependencies": {
-    "can-construct": "^3.0.0-pre.7",
-    "can-event": "^3.0.0-pre.5",
-    "can-list": "^3.0.0-pre.5",
-    "can-map": "^3.0.0-pre.8",
-    "can-observation": "^3.0.0-pre.2",
-    "can-util": "^3.0.0-pre.31",
-    "jquery": "3.1.1"
+    "can-construct": "^3.0.4",
+    "can-event": "^3.0.1",
+    "can-list": "^3.0.1",
+    "can-map": "^3.0.3",
+    "can-observation": "^3.0.3",
+    "can-util": "^3.0.13",
+    "jquery": "2.x - 3.x"
   },
   "devDependencies": {
     "can-fixture": "^1.0.10",
