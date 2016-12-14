@@ -1,6 +1,6 @@
 {
   "name": "can-model",
-  "version": "3.0.0-pre.1",
+  "version": "3.0.0",
   "description": "can.Model",
   "main": "can-model.js",
   "scripts": {
