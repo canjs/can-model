@@ -42,7 +42,7 @@
   },
   "homepage": "https://github.com/canjs/can-model#readme",
   "dependencies": {
-    "can-construct": "^3.0.4",
+    "can-construct": "^3.2.0",
     "can-event": "^3.0.1",
     "can-list": "^3.0.1",
     "can-map": "^3.0.3",
