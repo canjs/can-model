@@ -1,7 +1,15 @@
 language: node_js
 node_js: node
 before_install:
-  - "export DISPLAY=:99.0"
-  - "sh -e /etc/init.d/xvfb start"
+- export DISPLAY=:99.0
+- sh -e /etc/init.d/xvfb start
 addons:
-  firefox: "51.0"
+  firefox: '51.0'
+deploy:
+  provider: npm
+  email: core@donejs.com
+  api_key:
+    secure: P8fLS8nCT0CZv+APLupaHzwdg3mMOzjU0iSmB8auXZfCF8NxswacsPhf0nlmO6hn/xonENWGCagj8I0/Hn0aZoL/3s/wpReeuItf4iELwcEXCSTxF8N2OGj2UVeGGudWhWgFDcQkhh9SQdIPgucl8BdblpWn0tYYW7E2JRIK/ER7XuJy7zj6U3I9FdYEU+sTk2wt5UAB7hPf87cic3Wn0uhe3h9esPjp7dFzp42w5HtsD36iZU1xXj2s3KbS9hhfDD4xNfD+8a9gwvmgNvbOYCQT8gNGqjKFYPVxkpoYnflyrJw+xw6XlVb0ZXDkM+2M0ubrAWlvTfQDn9lm+xwGKrTmTPmaQ2LieZQvknAOkEgaE9/DTDl0VV75kqnPLKyOEVaV5ELT+kbmqRrrIGmPTE1+xeT69aEhiynvWnLxOCgPEn8vNDWMvj6iTHdrTTT5RNLlxbgNAPsBHeK/7NrVKX7hFI/sqDPux5qGZLDmy4s1RDPPz0Vdg59TQTPnUGCMj2938fc/6ILVKqnVlwtmP2kS4kY56f2Nev8dm7ioeMy/1x0U9lFhnuz0gVX7UANJOextF3LYYWKA3vvKWBvOdHqUufo2EkuU48NjR/eMzTpxEbCsr0xuxWDnriROIt2THdjgyUFH5M2nEGDyz8nbpwUMAudTfWQcUi+HmagaxjE=
+  on:
+    tags: true
+    repo: canjs/can-model
