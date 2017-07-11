@@ -556,7 +556,7 @@ ns.Model = Map.extend({
 		_eventSetup: function () {
 			var modelInstance = this.___get(this.constructor.id);
 			if (modelInstance != null) {
-				this.constructor.store[modelInstance ] = this;
+				this.constructor.store[modelInstance] = this;
 			}
 			return Map.prototype._eventSetup.apply(this, arguments);
 		},
@@ -566,12 +566,17 @@ ns.Model = Map.extend({
 		},
 		// Change the behavior of `___set` to account for the store.
 		___set: function (prop, val) {
-			Map.prototype.___set.call(this, prop, val);
-			// If we add or change the ID, update the store accordingly.
-			// TODO: shouldn't this also delete the record from the old ID in the store?
-			if (prop === this.constructor.id && this._bindings) {
+			var result = Map.prototype.___set.apply(this, arguments);
+
+			var isSettingId = prop === this.constructor.id;
+			var isActiveMap = !!(this._bindings || this.__bindEvents);
+			var shouldUpdateStoreReference = isSettingId && isActiveMap;
+			if (shouldUpdateStoreReference) {
 				this.constructor.store[getId(this)] = this;
+				// If we add or change the ID, update the store accordingly.
+				// TODO: shouldn't this also delete the record from the old ID in the store?
 			}
+			return result;
 		}
 	});
 
