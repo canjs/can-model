@@ -24,7 +24,7 @@
   "bugs": {
     "url": "https://github.com/canjs/can-model/issues"
   },
-  "system": {
+  "steal": {
     "directories": {
       "lib": "src"
     },
