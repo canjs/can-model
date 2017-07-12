@@ -2,7 +2,7 @@
   "name": "can-model",
   "version": "3.0.1",
   "description": "can.Model",
-  "main": "can-model.js",
+  "main": "src/can-model.js",
   "scripts": {
     "preversion": "npm test && npm run build",
     "testee": "testee src/test.html --browsers firefox",
@@ -23,16 +23,6 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/canjs/can-model/issues"
-  },
-  "steal": {
-    "directories": {
-      "lib": "src"
-    },
-    "npmAlgorithm": "flat",
-    "npmIgnore": [
-      "testee",
-      "jshint"
-    ]
   },
   "homepage": "https://github.com/canjs/can-model#readme",
   "dependencies": {
