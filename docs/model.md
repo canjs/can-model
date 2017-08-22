@@ -5,6 +5,7 @@
 @download can/model
 @test src/test/test.html
 @link ../docco/model/model.html docco
+@package ../package.json
 
 @signature `Model([name,] staticProperties, instanceProperties)`
 Create a Model constructor. (See [can-construct] for more details on this syntax.)
