@@ -11,7 +11,7 @@ If you use this package, you should [migrate](https://canjs.com/doc/migrate-3.ht
 
 ## Documentation
 
-Read the [API docs on CanJS.com](https://canjs.com/doc/can-model.html).
+Read the [API docs on CanJS.com](https://v2.canjs.com/docs/can.Model.html).
 
 ## Changelog
 
