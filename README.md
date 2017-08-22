@@ -6,7 +6,8 @@
 [![Travis build status](https://travis-ci.org/canjs/can-model.svg?branch=master)](https://travis-ci.org/canjs/can-model)
 [![Greenkeeper badge](https://badges.greenkeeper.io/canjs/can-model.svg)](https://greenkeeper.io/)
 
-npm install can-model
+*Note: This is the [legacy](https://canjs.com/doc/can-legacy.html) [can.Model](https://v2.canjs.com/docs/can.Model.html) package.
+If you use this package, you should [migrate](https://canjs.com/doc/migrate-3.html) to [can-connect](https://canjs.com/doc/can-connect.html) for [similar functionality](https://canjs.com/doc/can-connect/can/model/model.html).*
 
 ## Documentation
 
