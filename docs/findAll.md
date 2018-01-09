@@ -77,7 +77,7 @@ which is passed to [can-model.makeFindAll makeFindAll] to create the external
 `findAll` method.
 
 @param {Object} ajaxSettings A [http://api.jquery.com/jQuery.ajax/#jQuery-ajax-settings settings] object that
-specifies the options available to pass to [can-util/dom/ajax/ajax].
+specifies the options available to pass to [can-ajax].
 
 @body
 
@@ -122,7 +122,7 @@ The server should return data that looks like:
 ## Implement with an Object
 
 Implement findAll with an object that specifies the parameters to
-`[can-util/dom/ajax/ajax]` like:
+`[can-ajax]` like:
 
 ```
 Recipe = Model.extend({

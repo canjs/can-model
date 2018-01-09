@@ -36,7 +36,7 @@ Specify an options object that is used to make a HTTP request to create
 persistent instances.
 
 @param {Object} ajaxSettings A [http://api.jquery.com/jQuery.ajax/#jQuery-ajax-settings settings] object that
-specifies the options available to pass to [can-util/dom/ajax/ajax].
+specifies the options available to pass to [can-ajax].
 
 @body
 

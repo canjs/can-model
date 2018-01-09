@@ -4,16 +4,15 @@ var Construct = require('can-construct');
 var List = require('can-list');
 var Observation = require('can-observation');
 var Event = require('can-event');
-var assign = require('can-util/js/assign/assign');
-var canAjax = require('can-util/dom/ajax/ajax');
-var dev = require('can-util/js/dev/dev');
+var assign = require('can-assign');
+var canAjax = require('can-ajax');
+var dev = require('can-log/dev/dev');
 var each = require('can-util/js/each/each');
-var isArray = require('can-util/js/is-array/is-array');
 var isFunction = require('can-util/js/is-function/is-function');
 var isPlainObject = require('can-util/js/is-plain-object/is-plain-object');
 var isPromise = require('can-util/js/is-promise/is-promise');
 var makeArray = require('can-util/js/make-array/make-array');
-var ns = require('can-util/namespace');
+var ns = require('can-namespace');
 var string = require('can-util/js/string/string');
 
 var ML;
@@ -71,7 +70,7 @@ var pipe = function (def, thisArg, func) {
 		}
 
 		// If the `data` argument is a plain object, copy it into `params`.
-		params.data = typeof data === "object" && !isArray(data) ?
+		params.data = typeof data === "object" && !Array.isArray(data) ?
 			assign(params.data || {}, data) : data;
 
 		// Substitute in data for any templated parts of the URL.
@@ -92,7 +91,7 @@ var pipe = function (def, thisArg, func) {
 
 		// If `modelObj` is an Array, it it means we are coming from
 		// the queued request, and we're passing already-serialized data.
-		if (isArray(modelObj)) {
+		if (Array.isArray(modelObj)) {
 			// In that case, modelObj's signature will be `[modelObj, serializedData]`, so we need to unpack it.
 			args = modelObj[1];
 			modelObj = modelObj[0];
@@ -170,7 +169,7 @@ var pipe = function (def, thisArg, func) {
 				raw = raw.data;
 			}
 
-			if (typeof raw === 'undefined' || !isArray(raw)) {
+			if (typeof raw === 'undefined' || !Array.isArray(raw)) {
 				throw new Error('Could not get any raw data while converting using .models');
 			}
 
@@ -193,7 +192,7 @@ var pipe = function (def, thisArg, func) {
 			modelList.push.apply(modelList, tmp);
 
 			// If there was other stuff on `instancesRawData`, let's transfer that onto `modelList` too.
-			if (!isArray(instancesRawData)) {
+			if (!Array.isArray(instancesRawData)) {
 				each(instancesRawData, function (val, prop) {
 					if (prop !== 'data') {
 						modelList.attr(prop, val);
@@ -247,14 +246,14 @@ var pipe = function (def, thisArg, func) {
 		},
 		parseModels: function (prop) {
 			return function (attributes) {
-				if(isArray(attributes)) {
+				if(Array.isArray(attributes)) {
 					return attributes;
 				}
 
 				prop = prop || 'data';
 
 				var result = string.getObject(prop, attributes);
-				if(!isArray(result)) {
+				if(!Array.isArray(result)) {
 					throw new Error('Could not get any raw data while converting using .models');
 				}
 				return result;
@@ -669,7 +668,7 @@ ML = ns.Model.List = List.extend({
 	setup: function (params) {
 		// If there was a plain object passed to the List constructor,
 		// we use those as parameters for an initial findAll.
-		if (isPlainObject(params) && !isArray(params)) {
+		if (isPlainObject(params) && !Array.isArray(params)) {
 			List.prototype.setup.apply(this);
 			this.replace(isPromise(params) ? params : this.constructor.Map.findAll(params));
 		} else {
