@@ -106,7 +106,7 @@ The server should return data that looks like:
 ## Implement with an Object
 
 Implement `findOne` with an object that specifies the parameters to
-`[can-util/dom/ajax/ajax]` like:
+`[can-ajax]` like:
 
 ```
 Recipe = Model.extend({
