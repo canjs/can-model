@@ -5,6 +5,7 @@
   "main": "src/can-model.js",
   "scripts": {
     "preversion": "npm test && npm run build",
+    "postversion": "git push --tags && git push",
     "testee": "testee src/test.html --browsers firefox",
     "test": "npm run jshint && npm run testee",
     "jshint": "jshint src/. --config",
