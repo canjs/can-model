@@ -34,7 +34,7 @@
     "can-log": "^0.1.0",
     "can-map": "^3.0.3",
     "can-namespace": "1.0.0",
-    "can-observation": "^3.0.3",
+    "can-observation": "^4.0.0",
     "can-util": "^3.0.13",
     "jquery": "2.x - 3.x"
   },
