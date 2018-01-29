@@ -39,7 +39,7 @@
     "jquery": "2.x - 3.x"
   },
   "devDependencies": {
-    "can-fixture": "^1.0.10",
+    "can-fixture": "^2.0.0",
     "jshint": "^2.9.1",
     "steal": "^1.5.2",
     "steal-qunit": "1.0.1",
