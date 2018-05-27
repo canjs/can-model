@@ -28,7 +28,7 @@
   "dependencies": {
     "can-ajax": "^1.1.0",
     "can-assign": "^1.1.0",
-    "can-construct": "^3.0.4",
+    "can-construct": "^3.4.1",
     "can-event": "^3.0.1",
     "can-list": "^3.0.1",
     "can-log": "^0.1.0",
