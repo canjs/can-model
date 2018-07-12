@@ -1,6 +1,6 @@
 {
   "name": "can-model",
-  "version": "3.0.3",
+  "version": "4.0.0",
   "description": "can.Model",
   "main": "src/can-model.js",
   "scripts": {
@@ -26,20 +26,22 @@
   },
   "homepage": "https://github.com/canjs/can-model#readme",
   "dependencies": {
-    "can-ajax": "^1.1.0",
+    "can-ajax": "^2.0.0",
     "can-assign": "^1.1.0",
     "can-construct": "^3.0.4",
-    "can-event": "^3.0.1",
-    "can-list": "^3.0.1",
-    "can-log": "^0.1.0",
-    "can-map": "^3.0.3",
+    "can-event-queue": "^1.1.0",
+    "can-key": "^1.2.0",
+    "can-list": "^4.0.0",
+    "can-log": "^1.0.0",
+    "can-map": "^4.1.1",
     "can-namespace": "1.0.0",
-    "can-observation": "^3.0.3",
-    "can-util": "^3.0.13",
+    "can-observation": "^4.0.0",
+    "can-reflect": "^1.17.0",
+    "can-string": "^1.0.0",
     "jquery": "2.x - 3.x"
   },
   "devDependencies": {
-    "can-fixture": "^1.0.10",
+    "can-fixture": "^3.0.0",
     "jshint": "^2.9.1",
     "steal": "^1.5.2",
     "steal-qunit": "1.0.1",

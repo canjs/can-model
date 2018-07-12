@@ -3,17 +3,29 @@ var Map = require('can-map');
 var Construct = require('can-construct');
 var List = require('can-list');
 var Observation = require('can-observation');
-var Event = require('can-event');
+var Event = require('can-event-queue/map/map');
 var assign = require('can-assign');
 var canAjax = require('can-ajax');
 var dev = require('can-log/dev/dev');
-var each = require('can-util/js/each/each');
-var isFunction = require('can-util/js/is-function/is-function');
-var isPlainObject = require('can-util/js/is-plain-object/is-plain-object');
-var isPromise = require('can-util/js/is-promise/is-promise');
-var makeArray = require('can-util/js/make-array/make-array');
+var canReflect = require("can-reflect");
+
+
+var isPlainObject = canReflect.isPlainObject;
+var isPromise = canReflect.isPromise;
+var makeArray = canReflect.toArray;
 var ns = require('can-namespace');
-var string = require('can-util/js/string/string');
+var string = require('can-string');
+var canKey = require("can-key");
+var replaceWith = require("can-key/replace-with/replace-with");
+
+var isFunction = function(obj) {
+	return typeof obj === "function";
+};
+window.canReflect = canReflect;
+
+function urlParamEncoder (key, value) {
+	return encodeURIComponent(value)
+}
 
 var ML;
 /** @add ns.Model **/
@@ -74,7 +86,7 @@ var pipe = function (def, thisArg, func) {
 			assign(params.data || {}, data) : data;
 
 		// Substitute in data for any templated parts of the URL.
-		params.url = string.sub(params.url, params.data, true);
+		params.url = replaceWith(params.url, params.data, urlParamEncoder, true);
 
 		return canAjax(assign({
 			type: type.toUpperCase() || 'POST',
@@ -186,14 +198,14 @@ var pipe = function (def, thisArg, func) {
 
 			// If we pushed these directly onto the list, it would cause a change event for each model.
 			// So, we push them onto `tmp` first and then push everything at once, causing one atomic change event that contains all the models at once.
-			each(raw, function (rawPart) {
+			canReflect.eachIndex(raw, function (rawPart) {
 				tmp.push(self.model(rawPart, xhr));
 			});
 			modelList.push.apply(modelList, tmp);
 
 			// If there was other stuff on `instancesRawData`, let's transfer that onto `modelList` too.
 			if (!Array.isArray(instancesRawData)) {
-				each(instancesRawData, function (val, prop) {
+				canReflect.eachKey(instancesRawData, function (val, prop) {
 					if (prop !== 'data') {
 						modelList.attr(prop, val);
 					}
@@ -241,7 +253,7 @@ var pipe = function (def, thisArg, func) {
 	makeParser = {
 		parseModel: function (prop) {
 			return function (attributes) {
-				return prop ? string.getObject(prop, attributes) : attributes;
+				return prop ? canKey.get(attributes, prop) : attributes;
 			};
 		},
 		parseModels: function (prop) {
@@ -252,7 +264,7 @@ var pipe = function (def, thisArg, func) {
 
 				prop = prop || 'data';
 
-				var result = string.getObject(prop, attributes);
+				var result = canKey.get(attributes , prop);
 				if(!Array.isArray(result)) {
 					throw new Error('Could not get any raw data while converting using .models');
 				}
@@ -408,7 +420,7 @@ ns.Model = Map.extend({
 				clean = this._clean.bind(self);
 
 			// Go through `ajaxMethods` and set up static methods according to their configurations.
-			each(ajaxMethods, function (method, name) {
+			canReflect.eachKey(ajaxMethods, function (method, name) {
 				// Check the configuration for this ajaxMethod.
 				// If the configuration isn't a function, it should be a string (like `"GET /endpoint"`)
 				// or an object like `{url: "/endpoint", type: 'GET'}`.
@@ -450,7 +462,7 @@ ns.Model = Map.extend({
 			var hasCustomConverter = {};
 
 			// Set up `models` and `model`.
-			each(converters, function(converter, name) {
+			canReflect.eachKey(converters, function(converter, name) {
 				var parseName = "parse" + string.capitalize(name),
 					dataProperty = (staticProps && staticProps[name]) || self[name];
 
@@ -465,7 +477,7 @@ ns.Model = Map.extend({
 			});
 
 			// Sets up parseModel(s)
-			each(makeParser, function(maker, parseName) {
+			canReflect.eachKey(makeParser, function(maker, parseName) {
 				var prop = (staticProps && staticProps[parseName]) || self[parseName];
 				// e.g. parseModels: 'someProperty' make a default parseModel(s)
 				if(typeof prop === 'string') {
@@ -557,18 +569,18 @@ ns.Model = Map.extend({
 			if (modelInstance != null) {
 				this.constructor.store[modelInstance] = this;
 			}
-			return Map.prototype._eventSetup.apply(this, arguments);
+			return Map.prototype._eventSetup && Map.prototype._eventSetup.apply(this, arguments);
 		},
 		_eventTeardown: function () {
 			delete this.constructor.store[getId(this)];
-			return Map.prototype._eventTeardown.apply(this, arguments);
+			return Map.prototype._eventTeardown && Map.prototype._eventTeardown.apply(this, arguments);
 		},
 		// Change the behavior of `___set` to account for the store.
 		___set: function (prop, val) {
 			var result = Map.prototype.___set.apply(this, arguments);
 
 			var isSettingId = prop === this.constructor.id;
-			var isActiveMap = !!(this._bindings || this.__bindEvents);
+			var isActiveMap = canReflect.isBound(this);
 			var shouldUpdateStoreReference = isSettingId && isActiveMap;
 			if (shouldUpdateStoreReference) {
 				this.constructor.store[getId(this)] = this;
@@ -604,7 +616,7 @@ var responseHandlers = {
 };
 
 // Go through the response handlers and make the actual "make" methods.
-each(responseHandlers, function (method, name) {
+canReflect.eachKey(responseHandlers, function (method, name) {
 	ns.Model[name] = function (oldMethod) {
 		return function () {
 			var args = makeArray(arguments),
@@ -621,7 +633,7 @@ each(responseHandlers, function (method, name) {
 
 // ## can.Model.created, can.Model.updated, and can.Model.destroyed
 // Livecycle methods for models.
-each([
+canReflect.eachIndex([
 	"created",
 	"updated",
 	"destroyed"
@@ -640,14 +652,14 @@ each([
 		// handler( 'change','1.destroyed' ). This is used
 		// to remove items on destroyed from Model Lists.
 		// but there should be a better way.
-		Event.trigger.call(this, {type:funcName, target: this}, []);
+		Event.dispatch.call(this, {type:funcName, target: this}, []);
 
 		//!steal-remove-start
 		dev.log("Model.js - " + constructor.shortName + " " + funcName);
 		//!steal-remove-end
 
 		// Call event on the instance's Class
-		Event.trigger.call(constructor, funcName, [this]);
+		Event.dispatch.call(constructor, funcName, [this]);
 	};
 });
 

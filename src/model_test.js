@@ -2,14 +2,14 @@
 /* global Product: true */
 /* global global: true */
 /* global My: true */
-var can = require("can-util");
 var Model = require("can-model");
 var QUnit = require("steal-qunit");
 var fixture = require("can-fixture");
 var Map = require("can-map");
 var List = require("can-list");
 var Observe = require("can-observation");
-var Event = require("can-event");
+var Event = require("can-event-queue/map/map");
+var can = require("can-namespace");
 var Promise = global.Promise;
 
 QUnit.module('can-model', {
@@ -453,9 +453,9 @@ test('save error args', function () {
 		.save(function () {
 			ok(false, 'success should not be called');
 			start();
-		}, function (jQXHR) {
+		}, function (error) {
 			ok(true, 'error called');
-			ok(jQXHR.getResponseHeader, 'jQXHR object');
+			ok(error.type, 'unauthorized');
 			start();
 		});
 });
@@ -511,7 +511,7 @@ test('object definitions', function () {
 		equal(data[0].myflag, undefined, 'my flag is undefined');
 	});
 });
-// TODO when() deferreds like the fixture is using now do 
+// TODO when() deferreds like the fixture is using now do
 //   not support abort()
 QUnit.skip('aborting create update and destroy', function () {
 	stop();
@@ -605,7 +605,7 @@ test('store ajax binding', function () {
 		id: 1
 	}), Guy.findAll()])
 		.then(function (pack) {
-			var guyRes = pack[0], 
+			var guyRes = pack[0],
 					guysRes2 = pack[1];
 			equal(guyRes.id, 1, 'got a guy id 1 back');
 			equal(guysRes2[0].id, 1, 'got guys w/ id 1 back');
@@ -1575,8 +1575,8 @@ test('#1089 - resource definition - CRUD overrides', function() {
 	stop();
 	Promise.all([alldfd, onedfd, postdfd])
 	.then(function(pack) {
-		var things = pack[0], 
-				thing = pack[1], 
+		var things = pack[0],
+				thing = pack[1],
 				newthing = pack[2];
 		equal(things.length, 1, 'findAll override called');
 		equal(thing.name, 'foo', 'resource findOne called');
@@ -1711,6 +1711,3 @@ test("Models should be removed from store when instance.removeAttr('id') is call
 	ok(typeof Task.store[t1.id] === "undefined", "Model should be removed from store when `id` is removed");
 
 });
-
-
-

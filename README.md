@@ -6,22 +6,9 @@
 [![Travis build status](https://travis-ci.org/canjs/can-model.svg?branch=master)](https://travis-ci.org/canjs/can-model)
 [![Greenkeeper badge](https://badges.greenkeeper.io/canjs/can-model.svg)](https://greenkeeper.io/)
 
-*Note: This is the [legacy](https://canjs.com/doc/can-legacy.html) [can.Model](https://v2.canjs.com/docs/can.Model.html) package.
-If you use this package, you should [migrate](https://canjs.com/doc/migrate-3.html) to [can-connect](https://canjs.com/doc/can-connect.html) for [similar functionality](https://canjs.com/doc/can-connect/can/model/model.html).*
+*Note: This is the [legacy](https://canjs.com/doc/can-legacy.html) [can.Model](https://v2.canjs.com/docs/can.Model.html) package.*
 
-## Documentation
+## 4.X Notes
 
-Read the [can.Model API docs on CanJS.com](https://v2.canjs.com/docs/can.Model.html).
-
-## Changelog
-
-See the [latest releases on GitHub](https://github.com/canjs/can-model/releases).
-
-## Contributing
-
-The [contribution guide](https://github.com/canjs/can-model/blob/master/CONTRIBUTING.md) has information on getting help, reporting bugs, developing locally, and more.
-
-## License
-
-[MIT](https://github.com/canjs/can-model/blob/master/LICENSE.md)
-
+- `can-model` now uses `can-ajax` which will try to JSON.parse() error responses. Instead of getting a jQuery XHR object as the 2nd argument of a `.catch(handler(response, jqXHR))`,
+there is just a response.
