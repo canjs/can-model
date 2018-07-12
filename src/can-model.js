@@ -21,10 +21,9 @@ var replaceWith = require("can-key/replace-with/replace-with");
 var isFunction = function(obj) {
 	return typeof obj === "function";
 };
-window.canReflect = canReflect;
 
 function urlParamEncoder (key, value) {
-	return encodeURIComponent(value)
+	return encodeURIComponent(value);
 }
 
 var ML;
