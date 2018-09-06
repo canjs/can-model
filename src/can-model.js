@@ -449,7 +449,12 @@ ns.Model = Map.extend({
 						var def = newMethod.apply(this, arguments);
 						// ...and clean up the store.
 						var then = def.then(clean);
-						def.catch(clean);
+						// jquery 2.x only has .fail
+						if (def.catch) {
+							def.catch(clean);
+						} else {
+							def.fail(clean);
+						}
 						// Pass along `abort` so you can still abort the AJAX call.
 						then.abort = def.abort;
 

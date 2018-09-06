@@ -1711,3 +1711,25 @@ test("Models should be removed from store when instance.removeAttr('id') is call
 	ok(typeof Task.store[t1.id] === "undefined", "Model should be removed from store when `id` is removed");
 
 });
+
+test("uses def.fail if model uses jquery deferred", function() {
+	var Thing = Model.extend('Thing', {
+		findOne: function (data, success, error) {
+			// simulate a jquery@2 deferred that is not promise-compliant
+			var dfd = {
+				then: function() {
+					return dfd;
+				},
+				fail: function(cb) {
+					cb();
+				}
+			};
+			return dfd;
+		},
+		_clean: function () {
+			ok(true, '_clean should be called');
+		}
+	}, {});
+
+	Thing.findOne({});
+});
