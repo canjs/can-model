@@ -2,7 +2,7 @@
 var Map = require('can-map');
 var Construct = require('can-construct');
 var List = require('can-list');
-var Observation = require('can-observation');
+var ObservationRecorder = require('can-observation-recorder');
 var Event = require('can-event-queue/map/map');
 var assign = require('can-assign');
 var canAjax = require('can-ajax');
@@ -55,9 +55,9 @@ var pipe = function (def, thisArg, func) {
 
 	// ## getId
 	getId = function (inst) {
-		// `Observation.add` makes a note that `id` was just read.
-		Observation.add(inst, inst.constructor.id);
-		// Use `__get` instead of `attr` for performance. (But that means we have to remember to call `Observation.add`.)
+		// `ObservationRecorder.add` makes a note that `id` was just read.
+		ObservationRecorder.add(inst, inst.constructor.id);
+		// Use `__get` instead of `attr` for performance. (But that means we have to remember to call `ObservationRecorder.add`.)
 		return inst.___get(inst.constructor.id);
 	},
 

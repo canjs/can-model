@@ -7,7 +7,7 @@ var QUnit = require("steal-qunit");
 var fixture = require("can-fixture");
 var Map = require("can-map");
 var List = require("can-list");
-var Observe = require("can-observation");
+var ObservationRecorder = require("can-observation-recorder");
 var Event = require("can-event-queue/map/map");
 var can = require("can-namespace");
 var Promise = global.Promise;
@@ -896,8 +896,8 @@ asyncTest('destroying a model impact the right list', function () {
 });
 test('uses attr with isNew', function () {
 	// TODO this does not seem to be consistent expect(2);
-	var old = Observe.add;
-	Observe.add = function (object, attribute) {
+	var old = ObservationRecorder.add;
+	ObservationRecorder.add = function (object, attribute) {
 		if (attribute === 'id') {
 			ok(true, 'used attr');
 		}
@@ -906,7 +906,7 @@ test('uses attr with isNew', function () {
 		id: 4
 	});
 	m.isNew();
-	Observe.add = old;
+	ObservationRecorder.add = old;
 });
 test('extends defaults by calling base method', function () {
 	var M1 = Model.extend({
