@@ -28,7 +28,7 @@
   "dependencies": {
     "can-ajax": "^2.0.0",
     "can-assign": "^1.1.0",
-    "can-construct": "^3.0.4",
+    "can-construct": "^3.5.4",
     "can-event-queue": "^1.1.0",
     "can-key": "^1.2.0",
     "can-list": "^4.0.0",
