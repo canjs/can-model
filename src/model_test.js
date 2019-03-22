@@ -1712,5 +1712,19 @@ test("Models should be removed from store when instance.removeAttr('id') is call
 
 });
 
-
-
+test("set custom ajax function (#62)", function(){
+	fixture('GET /todos', function () {
+		return [{id: 1}];
+	});
+	var Todo = Model.extend({
+		findAll: "GET /todos",
+		ajax: function(settings) {
+			QUnit.ok(true,"custom ajax called");
+			QUnit.equal( settings.url , "/todos", "url looks right");
+			// Return the promise otherwise it throws an error
+			// "Cannot read property 'then' of undefined"
+			return Promise.resolve();
+		}
+	}, {});
+	Todo.findAll();
+});

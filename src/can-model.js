@@ -76,12 +76,12 @@ var pipe = function (def, thisArg, func) {
 		// Substitute in data for any templated parts of the URL.
 		params.url = string.sub(params.url, params.data, true);
 
-		return canAjax(assign({
-			type: type.toUpperCase() || 'POST',
-			dataType: dataType || 'json',
-			success: success,
-			error: error
-		}, params));
+		return (this.ajax || canAjax)(assign({
+            type: type.toUpperCase() || 'POST',
+            dataType: dataType || 'json',
+            success: success,
+            error: error
+        }, params));
 	},
 
 	// ## makeRequest
@@ -323,7 +323,7 @@ var pipe = function (def, thisArg, func) {
 				data;
 
 			// Make the AJAX call with the URL, data, and type indicated by the proper `ajaxMethod` above.
-			return ajax(str || this[ajaxMethod.url || "_url"], data, ajaxMethod.type || "get");
+			return ajax.call(this, str || this[ajaxMethod.url || "_url"], data, ajaxMethod.type || "get");
 		};
 	},
 	// ## createURLFromResource
