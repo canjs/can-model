@@ -77,11 +77,11 @@ var pipe = function (def, thisArg, func) {
 		params.url = string.sub(params.url, params.data, true);
 
 		return (this.ajax || canAjax)(assign({
-            type: type.toUpperCase() || 'POST',
-            dataType: dataType || 'json',
-            success: success,
-            error: error
-        }, params));
+			type: type.toUpperCase() || 'POST',
+			dataType: dataType || 'json',
+			success: success,
+			error: error
+		}, params));
 	},
 
 	// ## makeRequest
