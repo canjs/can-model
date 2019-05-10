@@ -1,6 +1,6 @@
 var MyTest;
-module('jquery/model/associations', {
-	setup: function () {
+QUnit.module('jquery/model/associations', {
+	beforeEach: function(assert) {
 		$.Model('MyTest.Person', {
 			serialize: function () {
 				return 'My name is ' + this.name;
@@ -31,7 +31,7 @@ module('jquery/model/associations', {
 		}, {});
 	}
 });
-test('associations work', function () {
+QUnit.test('associations work', function(assert) {
 	var c = new MyTest.Customer({
 		id: 5,
 		person: {
@@ -47,13 +47,13 @@ test('associations work', function () {
 			id: 3
 		}]
 	});
-	equal(c.person.name, 'Justin', 'association present');
-	equal(c.person.Class, MyTest.Person, 'belongs to association typed');
-	equal(c.issues.length, 0);
-	equal(c.loans.length, 2);
-	equal(c.loans[0].Class, MyTest.Loan);
+	assert.equal(c.person.name, 'Justin', 'association present');
+	assert.equal(c.person.Class, MyTest.Person, 'belongs to association typed');
+	assert.equal(c.issues.length, 0);
+	assert.equal(c.loans.length, 2);
+	assert.equal(c.loans[0].Class, MyTest.Loan);
 });
-test('Model association serialize on save', function () {
+QUnit.test('Model association serialize on save', function(assert) {
 	var c = new MyTest.Customer({
 		id: 5,
 		person: {
@@ -64,13 +64,13 @@ test('Model association serialize on save', function () {
 		loans: []
 	}),
 		cSave = c.save();
-	stop();
+	var done = assert.async();
 	cSave.then(function (customer) {
-		start();
-		equal(customer.personAttr, 'My name is thecountofzero', 'serialization works');
+		done();
+		assert.equal(customer.personAttr, 'My name is thecountofzero', 'serialization works');
 	});
 });
-test('Model.List association serialize on save', function () {
+QUnit.test('Model.List association serialize on save', function(assert) {
 	var c = new MyTest.Customer({
 		id: 5,
 		person: {
@@ -87,10 +87,10 @@ test('Model.List association serialize on save', function () {
 		}]
 	}),
 		cSave = c.save();
-	stop();
+	var done = assert.async();
 	cSave.then(function (customer) {
-		start();
-		ok(true, 'called back');
-		equal(customer.loansAttr.constructor, can.List, 'we get an observe list back');
+		done();
+		assert.ok(true, 'called back');
+		assert.equal(customer.loansAttr.constructor, can.List, 'we get an observe list back');
 	});
 });

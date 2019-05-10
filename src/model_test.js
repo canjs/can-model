@@ -13,10 +13,10 @@ var can = require("can-namespace");
 var Promise = global.Promise;
 
 QUnit.module('can-model', {
-	setup: function () {}
+	beforeEach: function(assert) {}
 });
 
-test('shadowed id', function () {
+QUnit.test('shadowed id', function(assert) {
 	var MyModel = Model.extend({
 		id: 'foo'
 	}, {
@@ -25,14 +25,14 @@ test('shadowed id', function () {
 		}
 	});
 	var newModel = new MyModel({});
-	ok(newModel.isNew(), 'new model is isNew');
+	assert.ok(newModel.isNew(), 'new model is isNew');
 	var oldModel = new MyModel({
 		foo: 'bar'
 	});
-	ok(!oldModel.isNew(), 'old model is not new');
-	equal(oldModel.foo(), 'bar', 'method can coexist with attribute');
+	assert.ok(!oldModel.isNew(), 'old model is not new');
+	assert.equal(oldModel.foo(), 'bar', 'method can coexist with attribute');
 });
-test('findAll deferred', function () {
+QUnit.test('findAll deferred', function(assert) {
 	var Person = Model('Person', {
 		findAll: function (params, success, error) {
 			var self = this;
@@ -46,16 +46,16 @@ test('findAll deferred', function () {
 				});
 		}
 	}, {});
-	stop();
+	var done = assert.async();
 	var people = Person.findAll({});
 	people.then(function (people) {
-		equal(people.length, 1, 'we got a person back');
-		equal(people[0].name, 'Justin', 'Got a name back');
-		equal(people[0].constructor.shortName, 'Person', 'got a class back');
-		start();
+		assert.equal(people.length, 1, 'we got a person back');
+		assert.equal(people[0].name, 'Justin', 'Got a name back');
+		assert.equal(people[0].constructor.shortName, 'Person', 'got a class back');
+		done();
 	});
 });
-test('findAll rejects non-array (#384)', function () {
+QUnit.test('findAll rejects non-array (#384)', function(assert) {
 	var Person = Model.extend({
 		findAll: function (params, success, error) {
 			var dfd = new Promise(function(resolve) {
@@ -68,21 +68,22 @@ test('findAll rejects non-array (#384)', function () {
 			return dfd;
 		}
 	}, {});
-	stop();
+	var done = assert.async();
 	Person.findAll({})
 		.then(function () {
-			ok(false, 'This should not succeed');
-			start();
+			assert.ok(false, 'This should not succeed');
+			done();
 		}, function (err) {
-			ok(err instanceof Error, 'Got an error');
-			equal(err.message, 'Could not get any raw data while converting using .models');
-			start();
+			assert.ok(err instanceof Error, 'Got an error');
+			assert.equal(err.message, 'Could not get any raw data while converting using .models');
+			done();
 		});
 });
 
-asyncTest('findAll deferred reject', function () {
-	// This test is automatically paused
-	var Person = Model('Person', {
+QUnit.test('findAll deferred reject', function(assert) {
+    var ready = assert.async();
+    // This test is automatically paused
+    var Person = Model('Person', {
 		findAll: function (params, success, error) {
 			var df = new Promise(function(resolve, reject) {
 				if (params.resolve) {
@@ -94,67 +95,66 @@ asyncTest('findAll deferred reject', function () {
 			return df;
 		}
 	}, {});
-	var people_reject = Person.findAll({
+    var people_reject = Person.findAll({
 		resolve: false
 	});
-	var people_resolve = Person.findAll({
+    var people_resolve = Person.findAll({
 		resolve: true
 	});
-	setTimeout(function () {
+    setTimeout(function () {
 		people_reject.then(function () {
-			ok(false, 'This deferred should be rejected');
+			assert.ok(false, 'This deferred should be rejected');
 		}, function () {
-			ok(true, 'The deferred is rejected');
+			assert.ok(true, 'The deferred is rejected');
 		});
 		people_resolve.then(function () {
-			ok(true, 'This deferred is resolved');
+			assert.ok(true, 'This deferred is resolved');
 		});
 		people_resolve.catch(function () {
-			ok(false, 'The deferred should be resolved');
+			assert.ok(false, 'The deferred should be resolved');
 		});
-		// continue the test
-		start();
+		ready();
 	}, 200);
 });
 if (window.jQuery) {
-	asyncTest('findAll abort', function () {
-		expect(4);
-		var df;
-		var Person = Model('Person', {
+	QUnit.test('findAll abort', function(assert) {
+        var ready = assert.async();
+        assert.expect(4);
+        var df;
+        var Person = Model('Person', {
 			findAll: function (params, success, error) {
 				var reject;
 				var df = new Promise(function(_, rej) { reject = rej; });
 				df.then(function () {
-					ok(!params.abort, 'not aborted');
+					assert.ok(!params.abort, 'not aborted');
 				}, function () {
-					ok(params.abort, 'aborted');
+					assert.ok(params.abort, 'aborted');
 				});
 				df.abort = reject;
 				return df;
 			}
 		}, {});
-		Person.findAll({
+        Person.findAll({
 			abort: false
 		})
-			.done(function () {
-				ok(true, 'resolved');
+			.start(function () {
+				assert.ok(true, 'resolved');
 			});
-		var resolveDf = df;
-		var abortPromise = Person.findAll({
+        var resolveDf = df;
+        var abortPromise = Person.findAll({
 			abort: true
 		})
 			.fail(function () {
-				ok(true, 'failed');
+				assert.ok(true, 'failed');
 			});
-		setTimeout(function () {
+        setTimeout(function () {
 			resolveDf.resolve();
 			abortPromise.abort();
-			// continue the test
-			start();
+			ready();
 		}, 200);
-	});
+    });
 }
-test('findOne deferred', function () {
+QUnit.test('findOne deferred', function(assert) {
 	var Person;
 	if (window.jQuery) {
 	  Person = Model('Person', {
@@ -175,15 +175,15 @@ test('findOne deferred', function () {
 			findOne: __dirname+'/test/person.json'
 		}, {});
 	}
-	stop();
+	var done = assert.async();
 	var person = Person.findOne({});
 	person.then(function (person) {
-		equal(person.name, 'Justin', 'Got a name back');
-		equal(person.constructor.shortName, 'Person', 'got a class back');
-		start();
+		assert.equal(person.name, 'Justin', 'Got a name back');
+		assert.equal(person.constructor.shortName, 'Person', 'got a class back');
+		done();
 	});
 });
-test('save deferred', function () {
+QUnit.test('save deferred', function(assert) {
 	var Person = Model.extend('Person', {
 		create: function (attrs, success, error) {
 			return Promise.resolve({id : 5}); //fixturize;
@@ -193,13 +193,13 @@ test('save deferred', function () {
 		name: 'Justin'
 	}),
 		personD = person.save();
-	stop();
+	var done = assert.async();
 	personD.then(function (person) {
-		start();
-		equal(person.id, 5, 'we got an id');
+		done();
+		assert.equal(person.id, 5, 'we got an id');
 	});
 });
-test('update deferred', function () {
+QUnit.test('update deferred', function(assert) {
 	var Person = Model('Person', {
 		update: function (id, attrs, success, error) {
 			return Promise.resolve({ thing: 'er' });
@@ -210,13 +210,13 @@ test('update deferred', function () {
 		id: 5
 	}),
 		personD = person.save();
-	stop();
+	var done = assert.async();
 	personD.then(function (person) {
-		start();
-		equal(person.thing, 'er', 'we got updated');
+		done();
+		assert.equal(person.thing, 'er', 'we got updated');
 	});
 });
-test('destroy deferred', function () {
+QUnit.test('destroy deferred', function(assert) {
 	var Person = Model('Person', {
 		destroy: function (id, success, error) {
 			return Promise.resolve({
@@ -229,13 +229,13 @@ test('destroy deferred', function () {
 		id: 5
 	}),
 		personD = person.destroy();
-	stop();
+	var done = assert.async();
 	personD.then(function (person) {
-		start();
-		equal(person.thing, 'er', 'we got destroyed');
+		done();
+		assert.equal(person.thing, 'er', 'we got destroyed');
 	});
 });
-test('models', function () {
+QUnit.test('models', function(assert) {
 	var Person = Model('Person', {
 		prettyName: function () {
 			return 'Mr. ' + this.name;
@@ -245,9 +245,9 @@ test('models', function () {
 		id: 1,
 		name: 'Justin'
 	}]);
-	equal(people[0].prettyName(), 'Mr. Justin', 'wraps wrapping works');
+	assert.equal(people[0].prettyName(), 'Mr. Justin', 'wraps wrapping works');
 });
-test('.models with custom id', function () {
+QUnit.test('.models with custom id', function(assert) {
 	var CustomId = Model('CustomId', {
 		findAll: __dirname+'/test/customids.json',
 		id: '_id'
@@ -263,9 +263,9 @@ test('.models with custom id', function () {
 		'_id': 2,
 		'name': 'Brian'
 	}]);
-	equal(results.length, 2, 'Got two items back');
-	equal(results[0].name, 'Justin', 'First name right');
-	equal(results[1].name, 'Brian', 'Second name right');
+	assert.equal(results.length, 2, 'Got two items back');
+	assert.equal(results[0].name, 'Justin', 'First name right');
+	assert.equal(results[1].name, 'Brian', 'Second name right');
 });
 /*
  test("async setters", function(){
@@ -295,24 +295,24 @@ test('.models with custom id', function () {
  equal(newName, "Brian",'new name');
  equal(++count, 1, "called once");
  ok(new Date() - now > 0, "time passed")
- start();
+ done();
  })
  var now = new Date();
  model.attr('name',"Brian");
- stop();
+ var done = assert.async();
  })*/
-test('binding', 2, function () {
+QUnit.test('binding', 2, function(assert) {
 	var Person = Model('Person');
 	var inst = new Person({
 		foo: 'bar'
 	});
 	inst.bind('foo', function (ev, val) {
-		ok(true, 'updated');
-		equal(val, 'baz', 'values match');
+		assert.ok(true, 'updated');
+		assert.equal(val, 'baz', 'values match');
 	});
 	inst.attr('foo', 'baz');
 });
-test('auto methods', function () {
+QUnit.test('auto methods', function(assert) {
 	//turn off fixtures
 	fixture.on = false;
 	var School = Model.extend('Jquery_Model_Models_School', {
@@ -321,64 +321,64 @@ test('auto methods', function () {
 		create: 'GET ' + __dirname+'/test/create.json',
 		update: 'GET ' + __dirname+'/test/update{id}.json'
 	}, {});
-	stop();
+	var done = assert.async();
 	School.findAll({
 		type: 'schools'
 	}, function (schools) {
-		ok(schools, 'findAll Got some data back');
+		assert.ok(schools, 'findAll Got some data back');
 		//TODO fix can-construct's eval statement so it can allow dots in names.
 		//equal(schools[0].constructor.shortName, 'School', 'there are schools');
 		School.findOne({
 			id: '4'
 		}, function (school) {
-			ok(school, 'findOne Got some data back');
+			assert.ok(school, 'findOne Got some data back');
 			//equal(school.constructor.shortName, 'School', 'a single school');
 			new School({
 				name: 'Highland'
 			})
 				.save(function (school) {
-					equal(school.name, 'Highland', 'create gets the right name');
+					assert.equal(school.name, 'Highland', 'create gets the right name');
 					school.attr({
 						name: 'LHS'
 					})
 						.save(function () {
-							start();
-							equal(school.name, 'LHS', 'create gets the right name');
+							done();
+							assert.equal(school.name, 'LHS', 'create gets the right name');
 							fixture.on = true;
 						});
 				});
 		});
 	});
 });
-test('isNew', function () {
+QUnit.test('isNew', function(assert) {
 	var Person = Model('Person');
 	var p = new Person();
-	ok(p.isNew(), 'nothing provided is new');
+	assert.ok(p.isNew(), 'nothing provided is new');
 	var p2 = new Person({
 		id: null
 	});
-	ok(p2.isNew(), 'null id is new');
+	assert.ok(p2.isNew(), 'null id is new');
 	var p3 = new Person({
 		id: 0
 	});
-	ok(!p3.isNew(), '0 is not new');
+	assert.ok(!p3.isNew(), '0 is not new');
 });
-test('findAll string', function () {
+QUnit.test('findAll string', function(assert) {
 	fixture.on = false;
 	var TestThing = Model('Test_Thing', {
 		findAll: __dirname+'/test/findAll.json' + ''
 	}, {});
-	stop();
+	var done = assert.async();
 	TestThing.findAll({}, function (things) {
-		equal(things.length, 1, 'got an array');
-		equal(things[0].id, 1, 'an array of things');
-		start();
+		assert.equal(things.length, 1, 'got an array');
+		assert.equal(things[0].id, 1, 'an array of things');
+		done();
 		fixture.on = true;
 	});
 });
 
-test('Model events', function () {
-	expect(12);
+QUnit.test('Model events', function(assert) {
+	assert.expect(12);
 	var order = 0,
 		item;
 	var TestEvent = Model('Test_Event', {
@@ -397,50 +397,50 @@ test('Model events', function () {
 			return def;
 		}
 	}, {});
-	stop();
+	var done = assert.async();
 	TestEvent.bind('created', function (ev, passedItem) {
-		ok(this === TestEvent, 'got model');
-		ok(passedItem === item, 'got instance');
-		equal(++order, 1, 'order');
+		assert.ok(this === TestEvent, 'got model');
+		assert.ok(passedItem === item, 'got instance');
+		assert.equal(++order, 1, 'order');
 		passedItem.save();
 	})
 		.bind('updated', function (ev, passedItem) {
-			equal(++order, 2, 'order');
-			ok(this === TestEvent, 'got model');
-			ok(passedItem === item, 'got instance');
+			assert.equal(++order, 2, 'order');
+			assert.ok(this === TestEvent, 'got model');
+			assert.ok(passedItem === item, 'got instance');
 			passedItem.destroy();
 		})
 		.bind('destroyed', function (ev, passedItem) {
-			equal(++order, 3, 'order');
-			ok(this === TestEvent, 'got model');
-			ok(passedItem === item, 'got instance');
-			start();
+			assert.equal(++order, 3, 'order');
+			assert.ok(this === TestEvent, 'got model');
+			assert.ok(passedItem === item, 'got instance');
+			done();
 		});
 	item = new TestEvent();
 	item.bind('created', function () {
-		ok(true, 'created');
+		assert.ok(true, 'created');
 	})
 		.bind('updated', function () {
-			ok(true, 'updated');
+			assert.ok(true, 'updated');
 		})
 		.bind('destroyed', function () {
-			ok(true, 'destroyed');
+			assert.ok(true, 'destroyed');
 		});
 	item.save();
 });
 
-test('removeAttr test', function () {
+QUnit.test('removeAttr test', function(assert) {
 	var Person = Model('Person');
 	var person = new Person({
 		foo: 'bar'
 	});
-	equal(person.foo, 'bar', 'property set');
+	assert.equal(person.foo, 'bar', 'property set');
 	person.removeAttr('foo');
-	equal(person.foo, undefined, 'property removed');
+	assert.equal(person.foo, undefined, 'property removed');
 	var attrs = person.attr();
-	equal(attrs.foo, undefined, 'attrs removed');
+	assert.equal(attrs.foo, undefined, 'attrs removed');
 });
-test('save error args', function () {
+QUnit.test('save error args', function(assert) {
 	var Foo = Model.extend('Testin_Models_Foo', {
 		create: '/testinmodelsfoos.json'
 	}, {});
@@ -448,18 +448,18 @@ test('save error args', function () {
 	fixture('/testinmodelsfoos.json', function (request, response) {
 		response(401, st);
 	});
-	stop();
+	var done = assert.async();
 	new Foo({})
 		.save(function () {
-			ok(false, 'success should not be called');
-			start();
+			assert.ok(false, 'success should not be called');
+			done();
 		}, function (error) {
-			ok(true, 'error called');
-			ok(error.type, 'unauthorized');
-			start();
+			assert.ok(true, 'error called');
+			assert.ok(error.type, 'unauthorized');
+			done();
 		});
 });
-test('object definitions', function () {
+QUnit.test('object definitions', function(assert) {
 	var ObjectDef = Model('ObjectDef', {
 		findAll: {
 			url: '/test/place',
@@ -484,41 +484,41 @@ test('object definitions', function () {
 	fixture('GET /test/place', function (original) {
 		return [original.data];
 	});
-	stop();
+	var done = assert.async();
 	ObjectDef.findOne({
 		id: 5
 	}, function () {
-		start();
+		done();
 	});
-	stop();
+	var done = assert.async();
 	// Do find all, pass some attrs
 	ObjectDef.findAll({
 		start: 0,
 		count: 10,
 		myflag: 1
 	}, function (data) {
-		start();
-		equal(data[0].myflag, 1, 'my flag set');
+		done();
+		assert.equal(data[0].myflag, 1, 'my flag set');
 	});
-	stop();
+	var done = assert.async();
 	// Do find all with slightly different attrs than before,
 	// and notice when leaving one out the other is still there
 	ObjectDef.findAll({
 		start: 0,
 		count: 10
 	}, function (data) {
-		start();
-		equal(data[0].myflag, undefined, 'my flag is undefined');
+		done();
+		assert.equal(data[0].myflag, undefined, 'my flag is undefined');
 	});
 });
 // TODO when() deferreds like the fixture is using now do
 //   not support abort()
 QUnit.skip('aborting create update and destroy', function () {
-	stop();
+	var done = assert.async();
 	var delay = fixture.delay;
 	fixture.delay = 1000;
 	fixture('POST /abort', function () {
-		ok(false, 'we should not be calling the fixture');
+		assert.ok(false, 'we should not be calling the fixture');
 		return {};
 	});
 	var Abortion = Model('Abortion', {
@@ -530,27 +530,27 @@ QUnit.skip('aborting create update and destroy', function () {
 		name: 'foo'
 	})
 		.save(function () {
-			ok(false, 'success create');
-			start();
+			assert.ok(false, 'success create');
+			done();
 		}, function () {
-			ok(true, 'create error called');
+			assert.ok(true, 'create error called');
 			deferred = new Abortion({
 				name: 'foo',
 				id: 5
 			})
 				.save(function () {
-					ok(false, 'save called');
-					start();
+					assert.ok(false, 'save called');
+					done();
 				}, function () {
-					ok(true, 'error called in update');
+					assert.ok(true, 'error called in update');
 					deferred = new Abortion({
 						name: 'foo',
 						id: 5
 					})
 						.destroy(function () {}, function () {
-							ok(true, 'destroy error called');
+							assert.ok(true, 'destroy error called');
 							fixture.delay = delay;
-							start();
+							done();
 						});
 					setTimeout(function () {
 						deferred.abort();
@@ -564,7 +564,7 @@ QUnit.skip('aborting create update and destroy', function () {
 		deferred.abort();
 	}, 10);
 });
-test('store binding', function () {
+QUnit.test('store binding', function(assert) {
 	var Storage = Model('Storage');
 	var s = new Storage({
 		id: 1,
@@ -572,20 +572,20 @@ test('store binding', function () {
 			foo: 'bar'
 		}
 	});
-	ok(!Storage.store[1], 'not stored');
+	assert.ok(!Storage.store[1], 'not stored');
 	var func = function () {};
 	s.bind('foo', func);
-	ok(Storage.store[1], 'stored');
+	assert.ok(Storage.store[1], 'stored');
 	s.unbind('foo', func);
-	ok(!Storage.store[1], 'not stored');
+	assert.ok(!Storage.store[1], 'not stored');
 	var s2 = new Storage({});
 	s2.bind('foo', func);
 	s2.attr('id', 5);
-	ok(Storage.store[5], 'stored');
+	assert.ok(Storage.store[5], 'stored');
 	s2.unbind('foo', func);
-	ok(!Storage.store[5], 'not stored');
+	assert.ok(!Storage.store[5], 'not stored');
 });
-test('store ajax binding', function () {
+QUnit.test('store ajax binding', function(assert) {
 	var Guy = Model.extend({
 		findAll: '/guys',
 		findOne: '/guy/{id}'
@@ -600,27 +600,27 @@ test('store ajax binding', function () {
 			id: 1
 		};
 	});
-	stop();
+	var done = assert.async();
 	Promise.all([Guy.findOne({
 		id: 1
 	}), Guy.findAll()])
 		.then(function (pack) {
 			var guyRes = pack[0],
 					guysRes2 = pack[1];
-			equal(guyRes.id, 1, 'got a guy id 1 back');
-			equal(guysRes2[0].id, 1, 'got guys w/ id 1 back');
-			ok(guyRes === guysRes2[0], 'guys are the same');
+			assert.equal(guyRes.id, 1, 'got a guy id 1 back');
+			assert.equal(guysRes2[0].id, 1, 'got guys w/ id 1 back');
+			assert.ok(guyRes === guysRes2[0], 'guys are the same');
 			// check the store is empty
 			setTimeout(function () {
 				var id;
-				start();
+				done();
 				for (id in Guy.store) {
-					ok(false, 'there should be nothing in the store');
+					assert.ok(false, 'there should be nothing in the store');
 				}
 			}, 1);
 		});
 });
-test('store instance updates', function () {
+QUnit.test('store instance updates', function(assert) {
 	var Guy, updateCount;
 	Guy = Model.extend({
 		findAll: 'GET /guys'
@@ -637,17 +637,17 @@ test('store instance updates', function () {
 		updateCount++;
 		return guys;
 	});
-	stop();
+	var done = assert.async();
 	Guy.findAll({}, function (guys) {
-		start();
+		done();
 		guys[0].bind('updated', function () {});
-		ok(Guy.store[1], 'instance stored');
-		equal(Guy.store[1].updateCount, 0, 'updateCount is 0');
-		equal(Guy.store[1].nested.count, 0, 'nested.count is 0');
+		assert.ok(Guy.store[1], 'instance stored');
+		assert.equal(Guy.store[1].updateCount, 0, 'updateCount is 0');
+		assert.equal(Guy.store[1].nested.count, 0, 'nested.count is 0');
 	});
 	Guy.findAll({}, function (guys) {
-		equal(Guy.store[1].updateCount, 1, 'updateCount is 1');
-		equal(Guy.store[1].nested.count, 1, 'nested.count is 1');
+		assert.equal(Guy.store[1].updateCount, 1, 'updateCount is 1');
+		assert.equal(Guy.store[1].nested.count, 1, 'nested.count is 1');
 	});
 });
 /*
@@ -669,9 +669,9 @@ fixture("GET /guys", function(){
 	remove = true;
 	return guys;
 });
-stop();
+var done = assert.async();
 Guy.findAll({}, function(guys){
-	start();
+	done();
 	guys[0].bind('updated', function(){});
 	ok(Guy.store[1], 'instance stored');
 	equal(Guy.store[1].name, 'mikey', 'name is mikey')
@@ -686,25 +686,25 @@ Guy.findAll({}, function(guys){
 
 })
  */
-test('templated destroy', function () {
+QUnit.test('templated destroy', function(assert) {
 	var MyModel = Model.extend({
 		destroy: '/destroyplace/{id}'
 	}, {});
 	fixture('/destroyplace/{id}', function (original) {
-		ok(true, 'fixture called');
-		equal(original.url, '/destroyplace/5', 'urls match');
+		assert.ok(true, 'fixture called');
+		assert.equal(original.url, '/destroyplace/5', 'urls match');
 		return {};
 	});
-	stop();
+	var done = assert.async();
 	new MyModel({
 		id: 5
 	})
 		.destroy(function () {
-			start();
+			done();
 		});
 	fixture('/product/{id}', function (original) {
-		equal(original.data.id, 9001, 'Changed ID is correctly set.');
-		start();
+		assert.equal(original.data.id, 9001, 'Changed ID is correctly set.');
+		done();
 		return {};
 	});
 	Base = Model.extend({
@@ -717,29 +717,29 @@ test('templated destroy', function () {
 		_id: 9001
 	})
 		.destroy();
-	stop();
+	var done = assert.async();
 });
-test('extended templated destroy', function () {
+QUnit.test('extended templated destroy', function(assert) {
 	var MyModel = Model({
 		destroy: '/destroyplace/{attr1}/{attr2}/{id}'
 	}, {});
 	fixture('/destroyplace/{attr1}/{attr2}/{id}', function (original) {
-		ok(true, 'fixture called');
-		equal(original.url, '/destroyplace/foo/bar/5', 'urls match');
+		assert.ok(true, 'fixture called');
+		assert.equal(original.url, '/destroyplace/foo/bar/5', 'urls match');
 		return {};
 	});
-	stop();
+	var done = assert.async();
 	new MyModel({
 		id: 5,
 		attr1: 'foo',
 		attr2: 'bar'
 	})
 		.destroy(function () {
-			start();
+			done();
 		});
 	fixture('/product/{attr3}/{id}', function (original) {
-		equal(original.data.id, 9001, 'Changed ID is correctly set.');
-		start();
+		assert.equal(original.data.id, 9001, 'Changed ID is correctly set.');
+		done();
 		return {};
 	});
 	Base = Model({
@@ -753,9 +753,9 @@ test('extended templated destroy', function () {
 		attr3: 'great'
 	})
 		.destroy();
-	stop();
+	var done = assert.async();
 });
-test('overwrite makeFindAll', function () {
+QUnit.test('overwrite makeFindAll', function(assert) {
 	var store = {},
 		count;
 	var LocalModel = Model.extend({
@@ -808,34 +808,34 @@ test('overwrite makeFindAll', function () {
 	var Food = LocalModel({
 		findOne: '/food/{id}'
 	}, {});
-	stop();
+	var done = assert.async();
 	count = 0;
 	Food.findOne({
 		id: 1
 	}, function (food) {
 		count = 1;
-		ok(true, 'empty findOne called back');
+		assert.ok(true, 'empty findOne called back');
 		food.bind('name', function () {
-			ok(true, 'name changed');
-			equal(count, 2, 'after last find one');
-			equal(this.name, 'ice water');
-			start();
+			assert.ok(true, 'name changed');
+			assert.equal(count, 2, 'after last find one');
+			assert.equal(this.name, 'ice water');
+			done();
 		});
 		Food.findOne({
 			id: 1
 		}, function (food2) {
 			count = 2;
-			ok(food2 === food, 'same instances');
-			equal(food2.name, 'hot dog');
+			assert.ok(food2 === food, 'same instances');
+			assert.equal(food2.name, 'hot dog');
 		});
 	});
 });
-test('inheriting unique model names', function () {
+QUnit.test('inheriting unique model names', function(assert) {
 	var Foo = Model.extend({});
 	var Bar = Model.extend({});
-	ok(Foo.fullName !== Bar.fullName, 'fullNames not the same');
+	assert.ok(Foo.fullName !== Bar.fullName, 'fullNames not the same');
 });
-test('model list attr', function () {
+QUnit.test('model list attr', function(assert) {
 	var Person = Model('Person', {}, {});
 	var list1 = new Person.List(),
 		list2 = new Person.List([
@@ -846,24 +846,25 @@ test('model list attr', function () {
 				id: 2
 			})
 		]);
-	equal(list1.length, 0, 'Initial empty list has length of 0');
+	assert.equal(list1.length, 0, 'Initial empty list has length of 0');
 	list1.attr(list2);
-	equal(list1.length, 2, 'Merging using attr yields length of 2');
+	assert.equal(list1.length, 2, 'Merging using attr yields length of 2');
 });
-asyncTest('destroying a model impact the right list', function () {
-	var Person = Model('Person', {
+QUnit.test('destroying a model impact the right list', function(assert) {
+    var ready = assert.async();
+    var Person = Model('Person', {
 		destroy: function (id, success) {
 			var def = Promise.resolve({});
 			return def;
 		}
 	}, {});
-	var Organisation = Model('Organisation', {
+    var Organisation = Model('Organisation', {
 		destroy: function (id, success) {
 			var def = Promise.resolve({});
 			return def;
 		}
 	}, {});
-	var people = new Person.List([
+    var people = new Person.List([
 		new Person({
 			id: 1
 		}),
@@ -879,27 +880,27 @@ asyncTest('destroying a model impact the right list', function () {
 				id: 2
 			})
 		]);
-	// you must be bound to the list to get this
-	people.bind('length', function () {});
-	orgs.bind('length', function () {});
-	// set each person to have an organization
-	people[0].attr('organisation', orgs[0]);
-	people[1].attr('organisation', orgs[1]);
-	equal(people.length, 2, 'Initial Person.List has length of 2');
-	equal(orgs.length, 2, 'Initial Organisation.List has length of 2');
-	orgs[0].destroy();
-	setTimeout(function() {
-		equal(people.length, 2, 'After destroying orgs[0] Person.List has length of 2');
-		equal(orgs.length, 1, 'After destroying orgs[0] Organisation.List has length of 1');
-		start();
+    // you must be bound to the list to get this
+    people.bind('length', function () {});
+    orgs.bind('length', function () {});
+    // set each person to have an organization
+    people[0].attr('organisation', orgs[0]);
+    people[1].attr('organisation', orgs[1]);
+    assert.equal(people.length, 2, 'Initial Person.List has length of 2');
+    assert.equal(orgs.length, 2, 'Initial Organisation.List has length of 2');
+    orgs[0].destroy();
+    setTimeout(function() {
+		assert.equal(people.length, 2, 'After destroying orgs[0] Person.List has length of 2');
+		assert.equal(orgs.length, 1, 'After destroying orgs[0] Organisation.List has length of 1');
+		ready();
 	}, 10);
 });
-test('uses attr with isNew', function () {
+QUnit.test('uses attr with isNew', function(assert) {
 	// TODO this does not seem to be consistent expect(2);
 	var old = ObservationRecorder.add;
 	ObservationRecorder.add = function (object, attribute) {
 		if (attribute === 'id') {
-			ok(true, 'used attr');
+			assert.ok(true, 'used attr');
 		}
 	};
 	var m = new Model({
@@ -908,16 +909,16 @@ test('uses attr with isNew', function () {
 	m.isNew();
 	ObservationRecorder.add = old;
 });
-test('extends defaults by calling base method', function () {
+QUnit.test('extends defaults by calling base method', function(assert) {
 	var M1 = Model.extend({
 		defaults: {
 			foo: 'bar'
 		}
 	}, {});
 	var M2 = M1({});
-	equal(M2.defaults.foo, 'bar');
+	assert.equal(M2.defaults.foo, 'bar');
 });
-test('.models updates existing list if passed', 4, function () {
+QUnit.test('.models updates existing list if passed', 4, function(assert) {
 	var MyModel = Model.extend({});
 	var list = MyModel.models([{
 		id: 1,
@@ -927,7 +928,7 @@ test('.models updates existing list if passed', 4, function () {
 		name: 'second'
 	}]);
 	list.bind('add', function (ev, newData) {
-		equal(newData.length, 3, 'Got all new items at once');
+		assert.equal(newData.length, 3, 'Got all new items at once');
 	});
 	var newList = MyModel.models([{
 		id: 3,
@@ -939,11 +940,11 @@ test('.models updates existing list if passed', 4, function () {
 		id: 5,
 		name: 'fifth'
 	}], list);
-	equal(list, newList, 'Lists are the same');
-	equal(newList.attr('length'), 3, 'List has new items');
-	equal(list[0].name, 'third', 'New item is the first one');
+	assert.equal(list, newList, 'Lists are the same');
+	assert.equal(newList.attr('length'), 3, 'List has new items');
+	assert.equal(list[0].name, 'third', 'New item is the first one');
 });
-test('calling destroy with unsaved model triggers destroyed event (#181)', function () {
+QUnit.test('calling destroy with unsaved model triggers destroyed event (#181)', function(assert) {
 	var MyModel = Model.extend({}, {}),
 		newModel = new MyModel(),
 		list = new MyModel.List(),
@@ -951,15 +952,15 @@ test('calling destroy with unsaved model triggers destroyed event (#181)', funct
 	// you must bind to a list for this feature
 	list.bind('length', function () {});
 	list.push(newModel);
-	equal(list.attr('length'), 1, 'List length as expected');
+	assert.equal(list.attr('length'), 1, 'List length as expected');
 	deferred = newModel.destroy();
-	ok(deferred, '.destroy returned a Deferred');
+	assert.ok(deferred, '.destroy returned a Deferred');
 	deferred.then(function (data) {
-		equal(list.attr('length'), 0, 'Unsaved model removed from list');
-		ok(data === newModel, 'Resolved with destroyed model as described in docs');
+		assert.equal(list.attr('length'), 0, 'Unsaved model removed from list');
+		assert.ok(data === newModel, 'Resolved with destroyed model as described in docs');
 	});
 });
-test('model removeAttr (#245)', function () {
+QUnit.test('model removeAttr (#245)', function(assert) {
 	var MyModel = Model.extend({}),
 		model;
 	Model._reqs++;
@@ -973,8 +974,8 @@ test('model removeAttr (#245)', function () {
 		id: 0,
 		name: 'text updated'
 	});
-	equal(model.attr('name'), 'text updated', 'attribute updated');
-	equal(model.attr('index'), 2, 'Index attribute still remains');
+	assert.equal(model.attr('name'), 'text updated', 'attribute updated');
+	assert.equal(model.attr('index'), 2, 'Index attribute still remains');
 	MyModel = Model.extend({
 		removeAttr: true
 	}, {});
@@ -989,13 +990,13 @@ test('model removeAttr (#245)', function () {
 		id: 0,
 		name: 'text updated'
 	});
-	equal(model.attr('name'), 'text updated', 'attribute updated');
-	deepEqual(model.attr(), {
+	assert.equal(model.attr('name'), 'text updated', 'attribute updated');
+	assert.deepEqual(model.attr(), {
 		id: 0,
 		name: 'text updated'
 	}, 'Index attribute got removed');
 });
-test('.model on create and update (#301)', function () {
+QUnit.test('.model on create and update (#301)', function(assert) {
 	var MyModel = Model.extend({
 		create: 'POST /todo',
 		update: 'PUT /todo',
@@ -1022,18 +1023,18 @@ test('.model on create and update (#301)', function () {
 			}
 		};
 	});
-	stop();
+	var done = assert.async();
 
 	MyModel.bind('created', function (ev, created) {
-		start();
-		deepEqual(created.attr(), {
+		done();
+		assert.deepEqual(created.attr(), {
 			id: 1,
 			name: 'Dishes'
 		}, '.model works for create');
 	})
 		.bind('updated', function (ev, updated) {
-			start();
-			deepEqual(updated.attr(), {
+			done();
+			assert.deepEqual(updated.attr(), {
 				id: 1,
 				name: 'Laundry',
 				updatedAt: updateTime
@@ -1043,16 +1044,16 @@ test('.model on create and update (#301)', function () {
 		name: 'Dishes'
 	}),
 		saveD = instance.save();
-	stop();
+	var done = assert.async();
 	saveD.then(function () {
 		instance.attr('name', 'Laundry')
 			.save();
 	});
 });
-test('List params uses findAll', function () {
-	stop();
+QUnit.test('List params uses findAll', function(assert) {
+	var done = assert.async();
 	fixture('/things', function (request) {
-		equal(request.data.param, 'value', 'params passed');
+		assert.equal(request.data.param, 'value', 'params passed');
 		return [{
 			id: 1,
 			name: 'Thing One'
@@ -1065,38 +1066,38 @@ test('List params uses findAll', function () {
 		param: 'value'
 	});
 	items.bind('add', function (ev, items, index) {
-		equal(items[0].name, 'Thing One', 'items added');
-		start();
+		assert.equal(items[0].name, 'Thing One', 'items added');
+		done();
 	});
 });
 
-test('destroy not calling callback for new instances (#403)', function () {
+QUnit.test('destroy not calling callback for new instances (#403)', function(assert) {
 	var Recipe = Model.extend({}, {});
-	expect(1);
-	stop();
+	assert.expect(1);
+	var done = assert.async();
 	new Recipe({
 		name: 'mow grass'
 	})
 		.destroy(function (recipe) {
-			ok(true, 'Destroy called');
-			start();
+			assert.ok(true, 'Destroy called');
+			done();
 		});
 });
 
-test('.model should always serialize Observes (#444)', function () {
+QUnit.test('.model should always serialize Observes (#444)', function(assert) {
 	var ConceptualDuck = Model.extend({
 		defaults: {
 			sayeth: 'Abstractly \'quack\''
 		}
 	}, {});
 	var ObserveableDuck = Map({}, {});
-	equal('quack', ConceptualDuck.model(new ObserveableDuck({
+	assert.equal('quack', ConceptualDuck.model(new ObserveableDuck({
 			sayeth: 'quack'
 		}))
 		.sayeth);
 });
 
-test('string configurable model and models functions (#128)', function () {
+QUnit.test('string configurable model and models functions (#128)', function(assert) {
 	var StrangeProp = Model.extend({
 		model: 'foo',
 		models: 'bar'
@@ -1114,7 +1115,7 @@ test('string configurable model and models functions (#128)', function () {
 			}
 		}]
 	});
-	deepEqual(strangers.attr(), [{
+	assert.deepEqual(strangers.attr(), [{
 		id: 1,
 		name: 'one'
 	}, {
@@ -1123,7 +1124,7 @@ test('string configurable model and models functions (#128)', function () {
 	}]);
 });
 
-test('create deferred does not resolve to the same instance', function () {
+QUnit.test('create deferred does not resolve to the same instance', function(assert) {
 	var Todo = Model.extend({
 		create: function () {
 			var def = Promise.resolve({
@@ -1138,16 +1139,16 @@ test('create deferred does not resolve to the same instance', function () {
 	});
 	t.bind('name', handler);
 	var def = t.save();
-	stop();
+	var done = assert.async();
 	def.then(function (todo) {
-		ok(todo === t, 'same instance');
-		start();
-		ok(Todo.store[5] === t, 'instance put in store');
+		assert.ok(todo === t, 'same instance');
+		done();
+		assert.ok(Todo.store[5] === t, 'instance put in store');
 		t.unbind('name', handler);
 	});
 });
 
-test("Model#save should not replace attributes with their default values (#560)", function () {
+QUnit.test("Model#save should not replace attributes with their default values (#560)", function(assert) {
 
 	fixture("POST /person.json", function (request, response) {
 
@@ -1168,16 +1169,16 @@ test("Model#save should not replace attributes with their default values (#560)"
 	}),
 		personD = person.save();
 
-	stop();
+	var done = assert.async();
 
 	personD.then(function (person) {
-		start();
-		equal(person.name, "Justin", "Model name attribute value is preserved after save");
+		done();
+		assert.equal(person.name, "Justin", "Model name attribute value is preserved after save");
 
 	});
 });
 
-test(".parseModel as function on create and update (#560)", function () {
+QUnit.test(".parseModel as function on create and update (#560)", function(assert) {
 	var MyModel = Model.extend({
 		create: 'POST /todo',
 		update: 'PUT /todo',
@@ -1208,18 +1209,18 @@ test(".parseModel as function on create and update (#560)", function () {
 		};
 	});
 
-	stop();
+	var done = assert.async();
 	MyModel.bind('created', function (ev, created) {
-		start();
-		deepEqual(created.attr(), {
+		done();
+		assert.deepEqual(created.attr(), {
 			id: 1,
 			name: 'Dishes',
 			aDefault: "bar"
 		}, '.model works for create');
 	})
 		.bind('updated', function (ev, updated) {
-			start();
-			deepEqual(updated.attr(), {
+			done();
+			assert.deepEqual(updated.attr(), {
 				id: 1,
 				name: 'Laundry',
 				updatedAt: updateTime
@@ -1232,7 +1233,7 @@ test(".parseModel as function on create and update (#560)", function () {
 	}),
 		saveD = instance.save();
 
-	stop();
+	var done = assert.async();
 	saveD.then(function () {
 		instance.attr('name', 'Laundry');
 		instance.removeAttr("aDefault");
@@ -1241,7 +1242,7 @@ test(".parseModel as function on create and update (#560)", function () {
 
 });
 
-test(".parseModel as string on create and update (#560)", function () {
+QUnit.test(".parseModel as string on create and update (#560)", function(assert) {
 	var MyModel = Model.extend({
 		create: 'POST /todo',
 		update: 'PUT /todo',
@@ -1270,18 +1271,18 @@ test(".parseModel as string on create and update (#560)", function () {
 		};
 	});
 
-	stop();
+	var done = assert.async();
 	MyModel.bind('created', function (ev, created) {
-		start();
-		deepEqual(created.attr(), {
+		done();
+		assert.deepEqual(created.attr(), {
 			id: 1,
 			name: 'Dishes',
 			aDefault: "bar"
 		}, '.model works for create');
 	})
 		.bind('updated', function (ev, updated) {
-			start();
-			deepEqual(updated.attr(), {
+			done();
+			assert.deepEqual(updated.attr(), {
 				id: 1,
 				name: 'Laundry',
 				updatedAt: updateTime
@@ -1294,7 +1295,7 @@ test(".parseModel as string on create and update (#560)", function () {
 	}),
 		saveD = instance.save();
 
-	stop();
+	var done = assert.async();
 	saveD.then(function () {
 		instance.attr('name', 'Laundry');
 		instance.removeAttr("aDefault");
@@ -1303,7 +1304,7 @@ test(".parseModel as string on create and update (#560)", function () {
 
 });
 
-test("parseModels and findAll", function () {
+QUnit.test("parseModels and findAll", function(assert) {
 
 	var array = [{
 		id: 1,
@@ -1320,9 +1321,9 @@ test("parseModels and findAll", function () {
 
 			// only check this if jQuery because its deferreds can resolve with multiple args
 			if (window.jQuery) {
-				ok(xhr, "xhr object provided");
+				assert.ok(xhr, "xhr object provided");
 			}
-			deepEqual(array, raw, "got passed raw data");
+			assert.deepEqual(array, raw, "got passed raw data");
 			return {
 				data: raw,
 				count: 1000
@@ -1330,16 +1331,16 @@ test("parseModels and findAll", function () {
 		}
 	}, {});
 
-	stop();
+	var done = assert.async();
 
 	MyModel.findAll({}, function (models) {
-		equal(models.count, 1000);
-		start();
+		assert.equal(models.count, 1000);
+		done();
 	});
 
 });
 
-test("parseModels and parseModel and findAll", function () {
+QUnit.test("parseModels and parseModel and findAll", function(assert) {
 
 	fixture("/mymodels", function () {
 		return {
@@ -1358,19 +1359,19 @@ test("parseModels and parseModel and findAll", function () {
 		parseModel: "myModel"
 	}, {});
 
-	stop();
+	var done = assert.async();
 
 	MyModel.findAll({}, function (models) {
-		deepEqual(models.attr(), [{
+		assert.deepEqual(models.attr(), [{
 			id: 1,
 			name: "first"
 		}], "correct models returned");
-		start();
+		done();
 	});
 
 });
 
-test("findAll rejects when parseModels returns non-array data #1662", function(){
+QUnit.test("findAll rejects when parseModels returns non-array data #1662", function(assert) {
 	fixture("/mymodels", function () {
 		return {
 			status: 'success',
@@ -1386,28 +1387,28 @@ test("findAll rejects when parseModels returns non-array data #1662", function()
 		}
 	}, {});
 
-	stop();
+	var done = assert.async();
 
 	MyModel.findAll({})
 		.then(function(){
-			ok(false, 'This should not succeed');
-			start();
+			assert.ok(false, 'This should not succeed');
+			done();
 		}, function(err){
-			ok(err instanceof Error, 'Got an error');
-			equal(err.message, 'Could not get any raw data while converting using .models');
-			start();
+			assert.ok(err instanceof Error, 'Got an error');
+			assert.equal(err.message, 'Could not get any raw data while converting using .models');
+			done();
 		});
 });
 
-test("Nested lists", function(){
+QUnit.test("Nested lists", function(assert) {
 	var Teacher = Model.extend({});
 	var teacher = new Teacher();
 	teacher.attr("locations", [{id: 1, name: "Chicago"}, {id: 2, name: "LA"}]);
-	ok(!(teacher.attr('locations') instanceof Teacher.List), 'nested list is not an instance of Teacher.List');
-	ok(!(teacher.attr('locations')[0] instanceof Teacher), 'nested map is not an instance of Teacher');
+	assert.ok(!(teacher.attr('locations') instanceof Teacher.List), 'nested list is not an instance of Teacher.List');
+	assert.ok(!(teacher.attr('locations')[0] instanceof Teacher), 'nested map is not an instance of Teacher');
 });
 
-test("#501 - resource definition - create", function() {
+QUnit.test("#501 - resource definition - create", function(assert) {
 	fixture("/foods", function() {
 		return [];
 	});
@@ -1416,15 +1417,15 @@ test("#501 - resource definition - create", function() {
 		resource: "/foods"
 	}, {});
 
-	stop();
+	var done = assert.async();
 	var steak = new FoodModel({name: "steak"});
 	steak.save(function(food) {
-		equal(food.name, "steak", "create created the correct model");
-		start();
+		assert.equal(food.name, "steak", "create created the correct model");
+		done();
 	});
 });
 
-test("#501 - resource definition - findAll", function() {
+QUnit.test("#501 - resource definition - findAll", function(assert) {
 	fixture("/drinks", function() {
 		return [{
 			id: 1,
@@ -1436,17 +1437,17 @@ test("#501 - resource definition - findAll", function() {
 		resource: "/drinks"
 	}, {});
 
-	stop();
+	var done = assert.async();
 	DrinkModel.findAll({}, function(drinks) {
-		deepEqual(drinks.attr(), [{
+		assert.deepEqual(drinks.attr(), [{
 			id: 1,
 			name: "coke"
 		}], "findAll returned the correct models");
-		start();
+		done();
 	});
 });
 
-test("#501 - resource definition - findOne", function() {
+QUnit.test("#501 - resource definition - findOne", function(assert) {
 	fixture("GET /clothes/{id}", function() {
 		return [{
 			id: 1,
@@ -1458,14 +1459,14 @@ test("#501 - resource definition - findOne", function() {
 		resource: "/clothes"
 	}, {});
 
-	stop();
+	var done = assert.async();
 	ClothingModel.findOne({id: 1}, function(item) {
-		equal(item[0].name, "pants", "findOne returned the correct model");
-		start();
+		assert.equal(item[0].name, "pants", "findOne returned the correct model");
+		done();
 	});
 });
 
-test("#501 - resource definition - remove trailing slash(es)", function() {
+QUnit.test("#501 - resource definition - remove trailing slash(es)", function(assert) {
 	fixture("POST /foods", function() {
 		return [];
 	});
@@ -1474,21 +1475,21 @@ test("#501 - resource definition - remove trailing slash(es)", function() {
 		resource: "/foods//////"
 	}, {});
 
-	stop();
+	var done = assert.async();
 	var steak = new FoodModel({name: "steak"});
 	steak.save(function(food) {
-		equal(food.name, "steak", "removed trailing '/' and created the correct model");
-		start();
+		assert.equal(food.name, "steak", "removed trailing '/' and created the correct model");
+		done();
 	});
 });
 
-test("model list destroy after calling replace", function(){
-	expect(2);
+QUnit.test("model list destroy after calling replace", function(assert) {
+	assert.expect(2);
 	var map = new Model({name: "map1"});
 	var map2 = new Model({name: "map2"});
 	var list = new Model.List([map, map2]);
 	list.bind('destroyed', function(ev){
-		ok(true, 'trigger destroyed');
+		assert.ok(true, 'trigger destroyed');
 	});
 	Event.dispatch.call(map, 'destroyed');
 	list.replace([map2]);
@@ -1503,20 +1504,20 @@ QUnit.skip("a model defined with a fullName has findAll working (#1034)", functi
 		List: MyList
 	},{});
 
-	equal(List.Map, My.Model, "list's Map points to My.Model");
+	assert.equal(List.Map, My.Model, "list's Map points to My.Model");
 
 });
 
-test("providing parseModels works", function(){
+QUnit.test("providing parseModels works", function(assert) {
 	var MyModel = Model.extend({
 		parseModel: "modelData"
 	},{});
 
 	var data = MyModel.parseModel({modelData: {id: 1}});
-	equal(data.id,1, "correctly used parseModel");
+	assert.equal(data.id,1, "correctly used parseModel");
 });
 
-test('#1089 - resource definition - inheritance', function() {
+QUnit.test('#1089 - resource definition - inheritance', function(assert) {
 	fixture('GET /things/{id}', function() {
 		return { id: 0, name: 'foo' };
 	});
@@ -1526,17 +1527,17 @@ test('#1089 - resource definition - inheritance', function() {
 		resource: '/things'
 	}, {});
 
-	stop();
+	var done = assert.async();
 	Thing.findOne({ id: 0 }, function(thing) {
-		equal(thing.name, 'foo', 'found model in inherited model');
-		start();
+		assert.equal(thing.name, 'foo', 'found model in inherited model');
+		done();
 	}, function(e, msg) {
-		ok(false, msg);
-		start();
+		assert.ok(false, msg);
+		done();
 	});
 });
 
-test('#1089 - resource definition - CRUD overrides', function() {
+QUnit.test('#1089 - resource definition - CRUD overrides', function(assert) {
 	fixture('GET /foos/{id}', function() {
 		return { id: 0, name: 'foo' };
 	});
@@ -1572,28 +1573,28 @@ test('#1089 - resource definition - CRUD overrides', function() {
 	onedfd = Thing.findOne({ id: 0 }),
 	postdfd = new Thing().save();
 
-	stop();
+	var done = assert.async();
 	Promise.all([alldfd, onedfd, postdfd])
 	.then(function(pack) {
 		var things = pack[0],
 				thing = pack[1],
 				newthing = pack[2];
-		equal(things.length, 1, 'findAll override called');
-		equal(thing.name, 'foo', 'resource findOne called');
-		equal(newthing.id, 1, 'post override called with function');
+		assert.equal(things.length, 1, 'findAll override called');
+		assert.equal(thing.name, 'foo', 'resource findOne called');
+		assert.equal(newthing.id, 1, 'post override called with function');
 
 		newthing.save(function(res) {
-			ok(res.updated, 'put override called with object');
-			start();
+			assert.ok(res.updated, 'put override called with object');
+			done();
 		});
 	})
 	.catch(function() {
-		ok(false, 'override request failed');
-		start();
+		assert.ok(false, 'override request failed');
+		done();
 	});
 });
 
-test("findAll not called if List constructor argument is deferred (#1074)", function() {
+QUnit.test("findAll not called if List constructor argument is deferred (#1074)", function(assert) {
 	var count = 0;
 	var Foo = Model.extend({
 		findAll: function() {
@@ -1602,10 +1603,10 @@ test("findAll not called if List constructor argument is deferred (#1074)", func
 		}
 	}, {});
 	new Foo.List(Foo.findAll());
-	equal(count, 1, "findAll called only once.");
+	assert.equal(count, 1, "findAll called only once.");
 });
 
-test("static methods do not get overwritten with resource property set (#1309)", function() {
+QUnit.test("static methods do not get overwritten with resource property set (#1309)", function(assert) {
 	var Base = Model.extend({
 		resource: '/path',
 		findOne: function() {
@@ -1616,20 +1617,20 @@ test("static methods do not get overwritten with resource property set (#1309)",
 		}
 	}, {});
 
-	stop();
+	var done = assert.async();
 
 	Base.findOne({}).then(function(model) {
-		ok(model instanceof Base);
-		deepEqual(model.attr(), {
+		assert.ok(model instanceof Base);
+		assert.deepEqual(model.attr(), {
 			text: 'Base findAll'
 		});
-		start();
+		done();
 	}, function() {
-		ok(false, 'Failed handler should not be called.');
+		assert.ok(false, 'Failed handler should not be called.');
 	});
 });
 
-test("parseModels does not get overwritten if already implemented in base class (#1246, #1272)", 5, function() {
+QUnit.test("parseModels does not get overwritten if already implemented in base class (#1246, #1272)", 5, function(assert) {
 	var Base = Model.extend({
 		findOne: function() {
 			var dfd = Promise.resolve({
@@ -1638,7 +1639,7 @@ test("parseModels does not get overwritten if already implemented in base class 
 			return dfd;
 		},
 		parseModel: function(attributes) {
-			deepEqual(attributes, {
+			assert.deepEqual(attributes, {
 				text: 'Base findOne'
 			}, 'parseModel called');
 			attributes.parsed = true;
@@ -1647,18 +1648,18 @@ test("parseModels does not get overwritten if already implemented in base class 
 	}, {});
 	var Extended = Base.extend({}, {});
 
-	stop();
+	var done = assert.async();
 
 	Extended.findOne({}).then(function(model) {
-		ok(model instanceof Base);
-		ok(model instanceof Extended);
-		deepEqual(model.attr(), {
+		assert.ok(model instanceof Base);
+		assert.ok(model instanceof Extended);
+		assert.deepEqual(model.attr(), {
 			text: 'Base findOne',
 			parsed: true
 		});
-		start();
+		done();
 	}, function() {
-		ok(false, 'Failed handler should not be called.');
+		assert.ok(false, 'Failed handler should not be called.');
 	});
 
 	var Third = Extended.extend({
@@ -1675,11 +1676,11 @@ test("parseModels does not get overwritten if already implemented in base class 
 	}, {});
 
 	Third.findOne({}).then(function(model) {
-		equal(model.attr('text'), 'Third findOne', 'correct findOne used');
+		assert.equal(model.attr('text'), 'Third findOne', 'correct findOne used');
 	});
 });
 
-test("Models with no id (undefined or null) are not placed in store (#1358)", function(){
+QUnit.test("Models with no id (undefined or null) are not placed in store (#1358)", function(assert) {
 	var MyStandardModel = Model.extend({});
 	var MyCustomModel = Model.extend({id:"ID"}, {});
 
@@ -1694,25 +1695,25 @@ test("Models with no id (undefined or null) are not placed in store (#1358)", fu
 	instanceCustom.bind('change', function(){});
 
 
-	ok(typeof MyStandardModel.store[instanceNull.id] === "undefined", "Model should not be added to store when id is null");
-	ok(typeof MyStandardModel.store[instanceUndefined.id] === "undefined", "Model should not be added to store when id is undefined");
-	ok(typeof MyCustomModel.store[instanceCustom[instanceCustom.constructor.id]] === "undefined", "Model should not be added to store when id is null");
+	assert.ok(typeof MyStandardModel.store[instanceNull.id] === "undefined", "Model should not be added to store when id is null");
+	assert.ok(typeof MyStandardModel.store[instanceUndefined.id] === "undefined", "Model should not be added to store when id is undefined");
+	assert.ok(typeof MyCustomModel.store[instanceCustom[instanceCustom.constructor.id]] === "undefined", "Model should not be added to store when id is null");
 
 });
 
-test("Models should be removed from store when instance.removeAttr('id') is called", function(){
+QUnit.test("Models should be removed from store when instance.removeAttr('id') is called", function(assert) {
 	var Task = Model.extend({},{});
 	var t1 = new Task({id: 1, name: "MyTask"});
 
 	t1.bind('change', function(){});
-	ok(Task.store[t1.id].name === "MyTask", "Model should be in store");
+	assert.ok(Task.store[t1.id].name === "MyTask", "Model should be in store");
 
 	t1.removeAttr("id");
-	ok(typeof Task.store[t1.id] === "undefined", "Model should be removed from store when `id` is removed");
+	assert.ok(typeof Task.store[t1.id] === "undefined", "Model should be removed from store when `id` is removed");
 
 });
 
-test("uses def.fail if model uses jquery deferred", function() {
+QUnit.test("uses def.fail if model uses jquery deferred", function(assert) {
 	var Thing = Model.extend('Thing', {
 		findOne: function (data, success, error) {
 			// simulate a jquery@2 deferred that is not promise-compliant
@@ -1727,22 +1728,22 @@ test("uses def.fail if model uses jquery deferred", function() {
 			return dfd;
 		},
 		_clean: function () {
-			ok(true, '_clean should be called');
+			assert.ok(true, '_clean should be called');
 		}
 	}, {});
 
 	Thing.findOne({});
 });
 
-test("set custom ajax function (#62)", function(){
+QUnit.test("set custom ajax function (#62)", function(assert) {
 	fixture('GET /todos', function () {
 		return [{id: 1}];
 	});
 	var Todo = Model.extend({
 		findAll: "GET /todos",
 		ajax: function(settings) {
-			QUnit.ok(true,"custom ajax called");
-			QUnit.equal( settings.url , "/todos", "url looks right");
+			assert.ok(true,"custom ajax called");
+			assert.equal( settings.url , "/todos", "url looks right");
 			// Return the promise otherwise it throws an error
 			// "Cannot read property 'then' of undefined"
 			return Promise.resolve();
