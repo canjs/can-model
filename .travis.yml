@@ -1,15 +1,16 @@
 language: node_js
 node_js: node
-before_install:
-- export DISPLAY=:99.0
-- sh -e /etc/init.d/xvfb start
 addons:
   firefox: '51.0'
 deploy:
   provider: npm
   email: core@donejs.com
   api_key:
-    secure: eJzS3Dom+Yz8F24LljkTpSCdn+1baD/fXTMM8v2rFcjHPoQQy6+qKswmYDjhbDW0H1DhImcsdZjeuGiQBbfIwpT5ityj11iefmS3//RGTo3WPzzi6CTWxD6KhAxzYf/swxudU6YfvxItKDCWIMqQ0pOgyP8UWsbNR1ZcPXqhzZApLilrQXjcgv0jubEV5ZhPnkyqsbkAL4OFeyOQ+vnfziA5O+WBiwt0BB0Cq/WmV1BTO63qop1xNMkSxZm9PV02CYhoInSFJAiFxK8CtDzbwvRb8Eo9rxFr3eVZ3tYqALHpV4CGrUzjt+ZbnAIZYXUaO0xXFj6ySLOir0N6XPR+OfNx7ns0A5QsPFEV2MSppeenIBYgoehr56SHcbKCWP4dRN3X3gR0jVgnBSDwAaSXjdxAsxmta5fLw6JxytHZUtweqMpRyF8lJWwTjGwwr/xeMQdpBts00g2yZRsU7kt6H6SLJgeLgM93IpSe7NCLFsEwB9dHW+p5Yw5cUGDqRVpXDuO6vXkZ56D1OKVFFfvKNHafJQ0fsSf/yu+r+zlaeF/NGHarU1fiMSJzAffqYhUX03+dJ3Ldg5mdXT/8mjyMIo7afMpM64biYLmNF3KrzdNWzK2c6/Q1fVe2uQckCtZCpZU3YliQafRnlSZAr8k8yqXMQXS5kVEd0icz1YxTXdE=
-  on:
+    secure: >-
+      eJzS3Dom+Yz8F24LljkTpSCdn+1baD/fXTMM8v2rFcjHPoQQy6+qKswmYDjhbDW0H1DhImcsdZjeuGiQBbfIwpT5ityj11iefmS3//RGTo3WPzzi6CTWxD6KhAxzYf/swxudU6YfvxItKDCWIMqQ0pOgyP8UWsbNR1ZcPXqhzZApLilrQXjcgv0jubEV5ZhPnkyqsbkAL4OFeyOQ+vnfziA5O+WBiwt0BB0Cq/WmV1BTO63qop1xNMkSxZm9PV02CYhoInSFJAiFxK8CtDzbwvRb8Eo9rxFr3eVZ3tYqALHpV4CGrUzjt+ZbnAIZYXUaO0xXFj6ySLOir0N6XPR+OfNx7ns0A5QsPFEV2MSppeenIBYgoehr56SHcbKCWP4dRN3X3gR0jVgnBSDwAaSXjdxAsxmta5fLw6JxytHZUtweqMpRyF8lJWwTjGwwr/xeMQdpBts00g2yZRsU7kt6H6SLJgeLgM93IpSe7NCLFsEwB9dHW+p5Yw5cUGDqRVpXDuO6vXkZ56D1OKVFFfvKNHafJQ0fsSf/yu+r+zlaeF/NGHarU1fiMSJzAffqYhUX03+dJ3Ldg5mdXT/8mjyMIo7afMpM64biYLmNF3KrzdNWzK2c6/Q1fVe2uQckCtZCpZU3YliQafRnlSZAr8k8yqXMQXS5kVEd0icz1YxTXdE=
+  'on':
     tags: true
     repo: canjs/can-model
+dist: xenial
+services:
+  - xvfb
