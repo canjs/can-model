@@ -127,13 +127,12 @@ if (window.jQuery) {
 		},{});
 
 		Person.findOne({}, function callback(instance, status, xhr){
-			var args = arguments;
 			QUnit.ok(instance, "instance");
 			QUnit.ok(status, "status");
 			QUnit.ok(xhr, "xhr");
 			can.Model.ajax = prev;
 			QUnit.start();
-		})
+		});
 	});
 	/*
 	asyncTest('findAll abort', function () {
@@ -1326,7 +1325,7 @@ test(".parseModel as string on create and update (#560)", function () {
 test("can create a model with a string", function(){
 	var foo = new Model("abc");
 	QUnit.ok(foo, "got abc");
-})
+});
 
 test("parseModels and findAll", function () {
 

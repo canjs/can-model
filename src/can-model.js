@@ -514,7 +514,7 @@ ns.Model = Map.extend({
 			var d;
 			if( is_jQueryPromise(def) ) {
 
-				var d = new jQuery.Deferred();
+				d = new jQuery.Deferred();
 				def.then(function () {
 					var args = Array.from(arguments),
 						success = true;
