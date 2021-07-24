@@ -1,6 +1,6 @@
 {
   "name": "can-model",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "can.Model",
   "main": "src/can-model.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "test": "npm run jshint && npm run testee",
     "jshint": "jshint src/. --config",
     "build": "node build.js",
-	"release:pre": "npm version prerelease && npm publish --tag pre",
+    "release:pre": "npm version prerelease && npm publish --tag pre",
     "release:patch": "npm version patch && npm publish",
     "release:minor": "npm version minor && npm publish",
     "release:major": "npm version major && npm publish"
