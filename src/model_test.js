@@ -1323,6 +1323,11 @@ test(".parseModel as string on create and update (#560)", function () {
 
 });
 
+test("can create a model with a string", function(){
+	var foo = new Model("abc");
+	QUnit.ok(foo, "got abc");
+})
+
 test("parseModels and findAll", function () {
 
 	var array = [{
