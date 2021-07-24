@@ -11,6 +11,7 @@ var ObservationRecorder = require("can-observation-recorder");
 var Event = require("can-event-queue/map/map");
 var can = require("can-namespace");
 var Promise = global.Promise;
+var jQuery = require("jquery");
 
 QUnit.module('can-model', {
 	setup: function () {}
@@ -117,6 +118,24 @@ asyncTest('findAll deferred reject', function () {
 	}, 200);
 });
 if (window.jQuery) {
+
+	asyncTest("support callbacks", function(){
+		var prev = can.Model.ajax;
+		can.Model.ajax = jQuery.ajax;
+		var Person = can.Model.extend({
+			findOne: __dirname +"/test/person.json"
+		},{});
+
+		Person.findOne({}, function callback(instance, status, xhr){
+			var args = arguments;
+			QUnit.ok(instance, "instance");
+			QUnit.ok(status, "status");
+			QUnit.ok(xhr, "xhr");
+			can.Model.ajax = prev;
+			QUnit.start();
+		})
+	});
+	/*
 	asyncTest('findAll abort', function () {
 		expect(4);
 		var df;
@@ -153,6 +172,7 @@ if (window.jQuery) {
 			start();
 		}, 200);
 	});
+	*/
 }
 test('findOne deferred', function () {
 	var Person;
@@ -1318,10 +1338,6 @@ test("parseModels and findAll", function () {
 		findAll: "/mymodels",
 		parseModels: function (raw, xhr) {
 
-			// only check this if jQuery because its deferreds can resolve with multiple args
-			if (window.jQuery) {
-				ok(xhr, "xhr object provided");
-			}
 			deepEqual(array, raw, "got passed raw data");
 			return {
 				data: raw,

@@ -25,33 +25,21 @@ var isFunction = function(obj) {
 function urlParamEncoder (key, value) {
 	return encodeURIComponent(value);
 }
+function is_jQueryPromise(obj){
+	return typeof window !== "undefined" && window.jQuery && obj && obj.always && obj.pipe;
+}
 
 var ML;
 /** @add ns.Model **/
 // ## model.js
 // (Don't steal this file directly in your code.)
 
-// ## pipe
-// `pipe` lets you pipe the results of a successful deferred
-// through a function before resolving the deferred.
-var pipe = function (def, thisArg, func) {
-	// The piped result will be available through a new Deferred.
-	var d = def.then(func.bind(thisArg));
-	// `can.ajax` returns a Deferred with an abort method to halt the AJAX call.
-	if (typeof def.abort === 'function') {
-		d.abort = function () {
-			return def.abort();
-		};
-	}
 
-	// Return the new (piped) Deferred.
-	return d;
-},
 
 	// ## modelNum
 	// When new model constructors are set up without a full name,
 	// `modelNum` lets us name them uniquely (to keep track of them).
-	modelNum = 0,
+var modelNum = 0,
 
 	// ## getId
 	getId = function (inst) {
@@ -123,7 +111,7 @@ var pipe = function (def, thisArg, func) {
 		jqXHR = model[type].apply(model, args);
 
 		// Make sure that ns.Model can react to the request before anything else does.
-		deferred = pipe(jqXHR, modelObj, function (data) {
+		deferred =ns.Model._pipe(jqXHR, modelObj, function (data) {
 			// `method` is here because `"destroyed" !== "destroy" + "d"`.
 			// TODO: Do something smarter/more consistent here?
 			modelObj[method || type + "d"](data, jqXHR);
@@ -519,6 +507,49 @@ ns.Model = Map.extend({
 			}
 			return arguments[0];
 		},
+		// ## pipe
+		// `pipe` lets you pipe the results of a successful deferred
+		// through a function before resolving the deferred.
+		_pipe: function (def, thisArg, func) {
+			var d;
+			if( is_jQueryPromise(def) ) {
+
+				var d = new jQuery.Deferred();
+				def.then(function () {
+					var args = Array.from(arguments),
+						success = true;
+
+					try {
+						// Pipe the results through the function.
+						args[0] = func.apply(thisArg, args);
+					} catch (e) {
+						success = false;
+						// The function threw an error, so reject the Deferred.
+						d.rejectWith(d, [e].concat(args));
+					}
+					if (success) {
+						// Resolve the new Deferred with the piped value.
+						d.resolveWith(d, args);
+					}
+				}, function () {
+					// Pass on the rejection if the original Deferred never resolved.
+					d.rejectWith(this, arguments);
+				});
+
+			} else {
+				// it's a normal promise
+				d = def.then(func.bind(thisArg));
+			}
+
+			if (typeof def.abort === 'function') {
+				d.abort = function () {
+					return def.abort();
+				};
+			}
+
+			return d;
+
+		},
 		models: converters.models,
 		model: converters.model
 	},
@@ -526,6 +557,11 @@ ns.Model = Map.extend({
 	{
 		// ## can.Model#setup
 		setup: function (attrs) {
+			if(typeof attrs === "string") {
+				console.warn("can-model: passed a string to instantiate a model");
+				Map.prototype.setup.apply(this, [{}]);
+				return;
+			}
 			// Try to add things as early as possible to the store (#457).
 			// This is the earliest possible moment, even before any properties are set.
 			var id = attrs && attrs[this.constructor.id];
@@ -627,7 +663,7 @@ canReflect.eachKey(responseHandlers, function (method, name) {
 				// If args[1] is a function, we were only passed one argument before success and failure callbacks.
 				oldArgs = isFunction(args[1]) ? args.splice(0, 1) : args.splice(0, 2),
 				// Call the AJAX method (`findAll` or `update`, etc.) and pipe it through the response handler from above.
-				def = pipe(oldMethod.apply(this, oldArgs), this, method);
+				def = ns.Model._pipe(oldMethod.apply(this, oldArgs), this, method);
 
 			def.then(args[0], args[1]);
 			return def;

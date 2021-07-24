@@ -38,11 +38,11 @@
     "can-observation": "^4.0.0",
     "can-observation-recorder": "^1.2.0",
     "can-reflect": "^1.17.0",
-    "can-string": "^1.0.0",
-    "jquery": "2.x - 3.x"
+    "can-string": "^1.0.0"
   },
   "devDependencies": {
     "can-fixture": "^3.0.0",
+    "jquery": "^3.6.0",
     "jshint": "^2.9.1",
     "steal": "^1.5.2",
     "steal-qunit": "1.0.1",
