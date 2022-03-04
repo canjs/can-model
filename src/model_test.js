@@ -604,6 +604,28 @@ test('store binding', function () {
 	s2.unbind('foo', func);
 	ok(!Storage.store[5], 'not stored');
 });
+test('store binding after _clean', function () {
+	var Storage = Model('Storage');
+	var s = new Storage({
+		id: 1,
+		thing: {
+			foo: 'bar'
+		}
+	});
+	Model._reqs++;
+	Storage._clean();
+	ok(!Storage.store[1], 'not stored');
+	var func = function () {};
+	s.bind('foo', func);
+	Model._reqs++;
+	Storage._clean();
+	ok(Storage.store[1], 'stored after clean');
+	s.unbind('foo', func);
+	Model._reqs++;
+	Storage._clean();
+	ok(!Storage.store[1], 'not stored after clean');
+});
+
 test('store ajax binding', function () {
 	var Guy = Model.extend({
 		findAll: '/guys',
