@@ -500,7 +500,7 @@ ns.Model = Map.extend({
 			if (!ns.Model._reqs) {
 				for (var id in this.store) {
 					// Delete all items in the store without any event bindings.
-					if (!this.store[id]._bindings) {
+					if (!canReflect.isBound(this.store[id])) {
 						delete this.store[id];
 					}
 				}
